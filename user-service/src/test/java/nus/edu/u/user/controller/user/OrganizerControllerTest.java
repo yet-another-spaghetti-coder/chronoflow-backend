@@ -35,13 +35,13 @@ class OrganizerControllerTest {
     void createUserForOrganizer_convertsAndDelegatesToService() {
         CreateUserReqVO req = new CreateUserReqVO();
         CreateUserDTO dto = CreateUserDTO.builder().email("mail").build();
-        when(userConvert.toDTO(req)).thenReturn(dto);
+        when(userConvert.convert(req)).thenReturn(dto);
         when(userService.createUserWithRoleIds(dto)).thenReturn(99L);
 
         CommonResult<Long> result = controller.createUserForOrganizer(req);
 
         assertThat(result.getData()).isEqualTo(99L);
-        verify(userConvert).toDTO(req);
+        verify(userConvert).convert(req);
         verify(userService).createUserWithRoleIds(dto);
     }
 
@@ -50,13 +50,13 @@ class OrganizerControllerTest {
         UpdateUserReqVO req = new UpdateUserReqVO();
         req.setRoleIds(List.of(10L));
         UpdateUserDTO dto = new UpdateUserDTO();
-        when(userConvert.toDTO(req)).thenReturn(dto);
+        when(userConvert.convert(req)).thenReturn(dto);
         UserDO updated = UserDO.builder().id(15L).email("updated@example.com").build();
         when(userService.updateUserWithRoleIds(any(UpdateUserDTO.class))).thenReturn(updated);
         when(userService.getAliveRoleIdsByUserId(15L)).thenReturn(List.of(1L, 2L));
         UpdateUserRespVO respVO =
                 UpdateUserRespVO.builder().id(15L).email("updated@example.com").build();
-        when(userConvert.toUpdateUserRespVO(updated)).thenReturn(respVO);
+        when(userConvert.convert(updated)).thenReturn(respVO);
 
         CommonResult<UpdateUserRespVO> result = controller.updateUserForOrganizer(12L, req);
 

@@ -10,6 +10,8 @@ spring:
     allow-circular-references: true
   cloud:
     gcp:
+      core:
+        enabled: false
       project-id: ${GCP_PROJECT_ID}
       credentials:
         encoded-key: ${PUB_SUB_SERVICE_ACCOUNT_JSON}
@@ -126,7 +128,7 @@ springdoc:
   default-flat-param-object: true
 
 knife4j:
-  enable: false
+  enable: true
   setting:
     language: zh_cn
 

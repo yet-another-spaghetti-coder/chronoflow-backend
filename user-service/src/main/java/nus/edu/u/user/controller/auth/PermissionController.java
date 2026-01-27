@@ -4,6 +4,8 @@ import static nus.edu.u.common.core.domain.CommonResult.success;
 
 import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.dev33.satoken.annotation.SaMode;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
  * @author Lu Shuwen
  * @date 2025-09-29
  */
+@Tag(name = "Permission Controller")
 @RestController
 @RequestMapping("/users/permissions")
 @Validated
@@ -31,12 +34,14 @@ public class PermissionController {
             value = {"ORGANIZER", "ADMIN"},
             mode = SaMode.OR)
     @GetMapping
+    @Operation(summary = "List all permissions")
     public CommonResult<List<PermissionRespVO>> list() {
         return success(permissionService.listPermissions());
     }
 
     @SaCheckRole("ADMIN")
     @PostMapping
+    @Operation(summary = "Create a permission")
     public CommonResult<Long> create(@RequestBody @Valid PermissionReqVO reqVO) {
         return success(permissionService.createPermission(reqVO));
     }
@@ -45,20 +50,23 @@ public class PermissionController {
             value = {"ORGANIZER", "ADMIN"},
             mode = SaMode.OR)
     @GetMapping("/{id}")
-    public CommonResult<PermissionRespVO> getPermission(@PathVariable("id") Long id) {
+    @Operation(summary = "Get a permission by id")
+    public CommonResult<PermissionRespVO> getPermission(@PathVariable Long id) {
         return success(permissionService.getPermission(id));
     }
 
     @SaCheckRole("ADMIN")
     @PatchMapping("/{id}")
+    @Operation(summary = "Update a permission")
     public CommonResult<PermissionRespVO> update(
-            @PathVariable("id") Long id, @RequestBody @Valid PermissionReqVO reqVO) {
+            @PathVariable Long id, @RequestBody @Valid PermissionReqVO reqVO) {
         return success(permissionService.updatePermission(id, reqVO));
     }
 
     @SaCheckRole("ADMIN")
     @DeleteMapping("/{id}")
-    public CommonResult<Boolean> delete(@PathVariable("id") Long id) {
+    @Operation(summary = "Delete a permission")
+    public CommonResult<Boolean> delete(@PathVariable Long id) {
         return success(permissionService.deletePermission(id));
     }
 }

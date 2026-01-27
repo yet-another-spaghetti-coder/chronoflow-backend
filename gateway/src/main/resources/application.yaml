@@ -131,6 +131,11 @@ gateway:
     - /users/reg/**
     - /ws
     - /ws/internal/**
+    - /doc.html
+    - /webjars/**
+    - /favicon.ico
+    - /v3/**
+    - /*/v3/**
 
 ############## Sa-Token config (文档: https://sa-token.cc) ##############
 sa-token:

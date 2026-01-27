@@ -34,7 +34,7 @@ public class OrganizerController {
     @SaCheckPermission(CREATE_MEMBER)
     @PostMapping("/create/user")
     public CommonResult<Long> createUserForOrganizer(@Valid @RequestBody CreateUserReqVO req) {
-        CreateUserDTO dto = userConvert.toDTO(req);
+        CreateUserDTO dto = userConvert.convert(req);
         Long userId = userService.createUserWithRoleIds(dto);
         return CommonResult.success(userId);
     }
@@ -43,14 +43,14 @@ public class OrganizerController {
     @PatchMapping("/update/user/{id}")
     public CommonResult<UpdateUserRespVO> updateUserForOrganizer(
             @PathVariable("id") Long id, @Valid @RequestBody UpdateUserReqVO vo) {
-        UpdateUserDTO dto = userConvert.toDTO(vo);
+        UpdateUserDTO dto = userConvert.convert(vo);
         dto.setId(id);
 
         UserDO updated = userService.updateUserWithRoleIds(dto);
         // Query the user's role ID
         List<Long> roleIds = userService.getAliveRoleIdsByUserId(updated.getId());
 
-        UpdateUserRespVO respVO = userConvert.toUpdateUserRespVO(updated);
+        UpdateUserRespVO respVO = userConvert.convert(updated);
         respVO.setRoleIds(roleIds);
         return CommonResult.success(respVO);
     }

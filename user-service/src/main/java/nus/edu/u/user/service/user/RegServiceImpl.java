@@ -56,7 +56,7 @@ public class RegServiceImpl implements RegService {
     @Resource private UserRoleMapper userRoleMapper;
 
     @Resource private PasswordEncoder passwordEncoder;
-    private final OrganizerNotificationPublisher organizerNotificationPublisher;
+    // private final OrganizerNotificationPublisher organizerNotificationPublisher;
 
     public static final String ORGANIZER_REMARK = "Organizer account";
 
@@ -220,7 +220,7 @@ public class RegServiceImpl implements RegService {
                         .build();
 
         try {
-            organizerNotificationPublisher.sendWelcomeOrganizerEmail(dto);
+            // organizerNotificationPublisher.sendWelcomeOrganizerEmail(dto);
         } catch (Exception e) {
             log.warn(
                     "Send organizer registration notification failed. email={}",

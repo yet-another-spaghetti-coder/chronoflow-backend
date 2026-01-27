@@ -1,10 +1,7 @@
 package nus.edu.u.domain.dataObject.push;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import nus.edu.u.domain.dataObject.common.BaseNotificationEntity;
 import nus.edu.u.domain.dataObject.common.NotificationDeliveryDO;
 import nus.edu.u.enums.push.PushStatus;
@@ -14,6 +11,7 @@ import nus.edu.u.enums.push.PushStatus;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@EqualsAndHashCode(callSuper=false)
 @Table(name = "push_message")
 public class PushMessageDO extends BaseNotificationEntity {
 

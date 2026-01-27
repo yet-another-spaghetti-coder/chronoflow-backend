@@ -12,9 +12,9 @@ import org.mapstruct.Mapper;
 @Mapper(componentModel = "spring")
 public interface UserConvert {
 
-    CreateUserDTO toDTO(CreateUserReqVO vo);
+    CreateUserDTO convert(CreateUserReqVO vo);
 
-    UpdateUserDTO toDTO(UpdateUserReqVO vo);
+    UpdateUserDTO convert(UpdateUserReqVO vo);
 
-    UpdateUserRespVO toUpdateUserRespVO(UserDO userDO);
+    UpdateUserRespVO convert(UserDO userDO);
 }

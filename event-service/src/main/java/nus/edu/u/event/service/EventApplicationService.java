@@ -13,7 +13,7 @@ public interface EventApplicationService {
 
     EventRespVO getEvent(Long eventId);
 
-    List<EventRespVO> getEventsByOrganizer(Long organizerId);
+    List<EventRespVO> list();
 
     UpdateEventRespVO updateEvent(Long id, EventUpdateReqVO reqVO);
 

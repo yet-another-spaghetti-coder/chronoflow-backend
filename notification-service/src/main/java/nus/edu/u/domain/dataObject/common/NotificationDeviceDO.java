@@ -1,10 +1,7 @@
 package nus.edu.u.domain.dataObject.common;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import nus.edu.u.enums.common.DeviceStatus;
 import nus.edu.u.enums.push.PushPlatform;
 
@@ -13,6 +10,7 @@ import nus.edu.u.enums.push.PushPlatform;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@EqualsAndHashCode(callSuper=false)
 @Table(
         name = "notification_device",
         uniqueConstraints = @UniqueConstraint(name = "uk_device_token", columnNames = "token"),

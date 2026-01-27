@@ -1,9 +1,12 @@
 package nus.edu.u.event.controller;
 
 import static nus.edu.u.common.constant.PermissionConstants.*;
+import static nus.edu.u.common.core.domain.CommonResult.success;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.dev33.satoken.stp.StpUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "Event Controller")
 @RestController
 @RequestMapping("/events")
 @Validated
@@ -34,47 +38,53 @@ public class EventController {
 
     @SaCheckPermission(CREATE_EVENT)
     @PostMapping
+    @Operation(summary = "Create an event")
     public CommonResult<EventRespVO> create(@Valid @RequestBody EventCreateReqVO request) {
         Long organizerId = StpUtil.getLoginIdAsLong();
         request.setOrganizerId(organizerId);
         EventRespVO resp = eventApplicationService.createEvent(request);
-        return CommonResult.success(resp);
+        return success(resp);
     }
 
     @GetMapping("/{id}")
-    public CommonResult<EventRespVO> getById(@PathVariable("id") Long id) {
-        return CommonResult.success(eventApplicationService.getEvent(id));
+    @Operation(summary = "Get an event by id")
+    public CommonResult<EventRespVO> getById(@PathVariable Long id) {
+        return success(eventApplicationService.getEvent(id));
     }
 
     @GetMapping
-    public CommonResult<List<EventRespVO>> getByOrganizer() {
-        Long organizerId = StpUtil.getLoginIdAsLong();
-        return CommonResult.success(eventApplicationService.getEventsByOrganizer(organizerId));
+    @Operation(summary = "Get all events")
+    public CommonResult<List<EventRespVO>> list() {
+        return success(eventApplicationService.list());
     }
 
     @SaCheckPermission(UPDATE_EVENT)
     @PatchMapping("/{id}")
+    @Operation(summary = "Update an event")
     public CommonResult<UpdateEventRespVO> update(
-            @PathVariable("id") Long id, @Valid @RequestBody EventUpdateReqVO request) {
+            @PathVariable Long id, @Valid @RequestBody EventUpdateReqVO request) {
         UpdateEventRespVO respVO = eventApplicationService.updateEvent(id, request);
-        return CommonResult.success(respVO);
+        return success(respVO);
     }
 
     @SaCheckPermission(DELETE_EVENT)
     @DeleteMapping("/{id}")
-    public CommonResult<Boolean> delete(@PathVariable("id") Long id) {
-        return CommonResult.success(eventApplicationService.deleteEvent(id));
+    @Operation(summary = "Delete an event")
+    public CommonResult<Boolean> delete(@PathVariable Long id) {
+        return success(eventApplicationService.deleteEvent(id));
     }
 
     @SaCheckPermission(UPDATE_EVENT)
     @PatchMapping("/{id}/restore")
-    public CommonResult<Boolean> restore(@PathVariable("id") Long id) {
-        return CommonResult.success(eventApplicationService.restoreEvent(id));
+    @Operation(summary = "Restore an event")
+    public CommonResult<Boolean> restore(@PathVariable Long id) {
+        return success(eventApplicationService.restoreEvent(id));
     }
 
     @SaCheckPermission(ASSIGN_TASK)
     @GetMapping("/{id}/assignable-groups")
+    @Operation(summary = "Get assignable groups for an event")
     public CommonResult<List<EventGroupRespVO>> assignableGroups(@PathVariable("id") Long eventId) {
-        return CommonResult.success(eventApplicationService.findAssignableGroups(eventId));
+        return success(eventApplicationService.findAssignableGroups(eventId));
     }
 }

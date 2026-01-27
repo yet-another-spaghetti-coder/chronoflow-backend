@@ -76,18 +76,6 @@ class EventControllerTest {
     }
 
     @Test
-    void getByOrganizer_usesCurrentLoginId() {
-        StpUtil.login(777L);
-        List<EventRespVO> responses = List.of(new EventRespVO());
-        when(eventApplicationService.getEventsByOrganizer(777L)).thenReturn(responses);
-
-        CommonResult<List<EventRespVO>> result = controller.getByOrganizer();
-
-        assertThat(result.getData()).isSameAs(responses);
-        verify(eventApplicationService).getEventsByOrganizer(777L);
-    }
-
-    @Test
     void update_delegatesToService() {
         EventUpdateReqVO req = new EventUpdateReqVO();
         UpdateEventRespVO resp = new UpdateEventRespVO();

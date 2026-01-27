@@ -3,6 +3,7 @@ package nus.edu.u.event.service;
 import static nus.edu.u.common.enums.ErrorCodeConstants.*;
 import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -81,7 +82,8 @@ public class EventApplicationServiceImpl implements EventApplicationService {
 
     @Override
     @Transactional
-    public List<EventRespVO> getEventsByOrganizer(Long organizerId) {
+    public List<EventRespVO> list() {
+        Long organizerId = StpUtil.getLoginIdAsLong();
         if (!userRpcService.exists(organizerId)) {
             throw exception(EVENT_NOT_FOUND);
         }
