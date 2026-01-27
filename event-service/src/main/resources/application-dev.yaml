@@ -35,13 +35,13 @@ spring:
       datasource:
         master:
           driver-class-name: com.mysql.cj.jdbc.Driver
-          url: jdbc:mysql://${DEV_MASTER_DB_HOST}:${DEV_MASTER_DB_PORT}/chronoflow?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
+          url: jdbc:mysql://${DEV_MASTER_DB_HOST}:${DEV_MASTER_DB_PORT}/event?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
           username: ${DEV_MASTER_DB_USER}
           password: ${DEV_MASTER_DB_PASSWORD}
         slave:
           driver-class-name: com.mysql.cj.jdbc.Driver
           lazy: true # Enable lazy loading to ensure startup speed
-          url: jdbc:mysql://${DEV_SLAVE_DB_HOST}:${DEV_SLAVE_DB_PORT}/chronoflow?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
+          url: jdbc:mysql://${DEV_SLAVE_DB_HOST}:${DEV_SLAVE_DB_PORT}/event?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
           username: ${DEV_SLAVE_DB_USER}
           password: ${DEV_SLAVE_DB_PASSWORD}
   data:

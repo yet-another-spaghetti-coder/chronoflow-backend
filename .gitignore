@@ -39,4 +39,6 @@ logs/
 
 .DS_Store
 
-**/README.md
+mongo_data
+
+mysql/data

@@ -10,8 +10,6 @@ spring:
     allow-circular-references: true
   cloud:
     gcp:
-      core:
-        enabled: false
       project-id: ${GCP_PROJECT_ID}
       credentials:
         encoded-key: ${PUB_SUB_SERVICE_ACCOUNT_JSON}

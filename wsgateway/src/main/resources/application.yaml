@@ -29,7 +29,7 @@ spring:
           # Minimum number of idle connections in the connection pool
           min-idle: 0
     mongodb:
-      uri: mongodb+srv://chronoflow:MqT4x15GWuCDJ3L9@chronoflow-mongo-cluster.nnye375.mongodb.net/chronoflow?retryWrites=true&w=majority&appName=chronoflow-mongo-cluster
+      uri: ${MONGODB_URI}
 
 
   cloud:
