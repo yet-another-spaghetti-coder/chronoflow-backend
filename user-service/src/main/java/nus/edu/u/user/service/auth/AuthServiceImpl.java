@@ -12,6 +12,8 @@ import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.jwt.JWT;
+import cn.hutool.jwt.JWTUtil;
 import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -65,6 +67,19 @@ public class AuthServiceImpl implements AuthService {
         return userDO;
     }
 
+    public UserDO authenticate(String username) {
+        // 1.Check username first
+        UserDO userDO = userService.getUserByUsername(username);
+        if (userDO == null) {
+            throw exception(AUTH_LOGIN_BAD_CREDENTIALS);
+        }
+        // 3.Check if user is disabled
+        if (CommonStatusEnum.isDisable(userDO.getStatus())) {
+            throw exception(AUTH_LOGIN_USER_DISABLED);
+        }
+        return userDO;
+    }
+
     @Override
     public LoginRespVO login(LoginReqVO reqVO) {
         // 1.Verify username and password
@@ -74,6 +89,18 @@ public class AuthServiceImpl implements AuthService {
         // 3.Create token
         return handleLogin(userDO, reqVO.isRemember(), reqVO.getRefreshToken());
     }
+
+
+    public LoginRespVO mobileSsoLogin(String token) {
+        //TODO: Verify JWT signature
+        JWT jwtToken = JWTUtil.parseToken(token);
+        String email = jwtToken.getPayload("email").toString();
+        UserDO userDO = authenticate(email);
+        userDO.setLoginTime(LocalDateTime.now());
+        return handleLogin(userDO, false, "");
+    }
+
+
 
     private LoginRespVO handleLogin(UserDO userDO, boolean rememberMe, String refreshToken) {
         // 1.Create UserTokenDTO which contains parameters required to create a token

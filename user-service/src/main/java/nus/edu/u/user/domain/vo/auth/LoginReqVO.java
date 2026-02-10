@@ -1,5 +1,6 @@
 package nus.edu.u.user.domain.vo.auth;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
@@ -28,6 +29,9 @@ public class LoginReqVO {
 
     @Schema(description = "Need remember account", example = "true")
     @Builder.Default private boolean remember = true;
+
+    @JsonProperty(required = false)
+    private String jwtToken;
 
     private String refreshToken;
 }

@@ -22,6 +22,8 @@ public interface AuthService {
      */
     UserDO authenticate(String username, String password);
 
+
+    LoginRespVO mobileSsoLogin(String jwtToken);
     /**
      * Login service
      *

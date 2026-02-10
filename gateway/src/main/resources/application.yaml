@@ -126,6 +126,7 @@ knife4j:
 
 gateway:
   white-list:
+    - /users/auth/mobileSsoLogin
     - /users/auth/login
     - /users/auth/refresh
     - /users/reg/**

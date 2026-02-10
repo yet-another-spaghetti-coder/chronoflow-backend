@@ -63,6 +63,23 @@ public class AuthController {
         response.addCookie(cookieFactory.createCookie(loginRespVO.getRefreshToken()));
         return success(loginRespVO);
     }
+    @SaIgnore
+    @PostMapping("/mobileSsoLogin")
+    @Operation(summary = "Mobile SSO Login")
+    public CommonResult<LoginRespVO> ssoLogin(
+            @RequestBody String jwtToken,
+            HttpServletResponse response) {
+        AbstractCookieFactory cookieFactory;
+        LoginRespVO loginRespVO = authService.mobileSsoLogin(jwtToken);
+        cookieFactory =
+                new LongLifeRefreshTokenCookie(
+                        cookieConfig.isHttpOnly(),
+                        cookieConfig.isSecurity(),
+                        REFRESH_TOKEN_REMEMBER_COOKIE_MAX_AGE);
+        response.addCookie(cookieFactory.createCookie(loginRespVO.getRefreshToken()));
+        return success(loginRespVO);
+    }
+
 
     @PostMapping("/logout")
     @Operation(summary = "Logout")
