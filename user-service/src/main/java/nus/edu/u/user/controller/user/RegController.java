@@ -8,10 +8,7 @@ import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.core.domain.CommonResult;
-import nus.edu.u.user.domain.vo.reg.RegMemberReqVO;
-import nus.edu.u.user.domain.vo.reg.RegOrganizerReqVO;
-import nus.edu.u.user.domain.vo.reg.RegSearchReqVO;
-import nus.edu.u.user.domain.vo.reg.RegSearchRespVO;
+import nus.edu.u.user.domain.vo.reg.*;
 import nus.edu.u.user.service.user.RegService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -49,6 +46,15 @@ public class RegController {
     public CommonResult<Boolean> registerAsOrganizer(
             @RequestBody @Valid RegOrganizerReqVO regOrganizerReqVO) {
         boolean isSuccess = regService.registerAsOrganizer(regOrganizerReqVO);
+        return isSuccess ? success(true) : error(REG_FAIL);
+    }
+
+
+
+    @PostMapping("/sso-organizer")
+    public CommonResult<Boolean> registerAsOrganizer(
+            @RequestBody @Valid SsoRegOrganizerReqVO ssoRegOrganizerReqVO) {
+        boolean isSuccess = regService.registerAsOrganizer(ssoRegOrganizerReqVO);
         return isSuccess ? success(true) : error(REG_FAIL);
     }
 }

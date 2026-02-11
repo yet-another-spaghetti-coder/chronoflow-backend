@@ -4,6 +4,8 @@ import static nus.edu.u.common.enums.ErrorCodeConstants.*;
 import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
 
 import cn.hutool.core.util.ObjUtil;
+import cn.hutool.jwt.JWT;
+import cn.hutool.jwt.JWTUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import jakarta.annotation.Resource;
 import java.util.List;
@@ -18,10 +20,7 @@ import nus.edu.u.user.domain.dataobject.role.RolePermissionDO;
 import nus.edu.u.user.domain.dataobject.tenant.TenantDO;
 import nus.edu.u.user.domain.dataobject.user.UserDO;
 import nus.edu.u.user.domain.dataobject.user.UserRoleDO;
-import nus.edu.u.user.domain.vo.reg.RegMemberReqVO;
-import nus.edu.u.user.domain.vo.reg.RegOrganizerReqVO;
-import nus.edu.u.user.domain.vo.reg.RegSearchReqVO;
-import nus.edu.u.user.domain.vo.reg.RegSearchRespVO;
+import nus.edu.u.user.domain.vo.reg.*;
 import nus.edu.u.user.enums.user.UserStatusEnum;
 import nus.edu.u.user.mapper.permission.PermissionMapper;
 import nus.edu.u.user.mapper.role.RoleMapper;
@@ -43,19 +42,26 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class RegServiceImpl implements RegService {
 
-    @Resource private TenantMapper tenantMapper;
+    @Resource
+    private TenantMapper tenantMapper;
 
-    @Resource private UserMapper userMapper;
+    @Resource
+    private UserMapper userMapper;
 
-    @Resource private PermissionMapper permissionMapper;
+    @Resource
+    private PermissionMapper permissionMapper;
 
-    @Resource private RolePermissionMapper rolePermissionMapper;
+    @Resource
+    private RolePermissionMapper rolePermissionMapper;
 
-    @Resource private RoleMapper roleMapper;
+    @Resource
+    private RoleMapper roleMapper;
 
-    @Resource private UserRoleMapper userRoleMapper;
+    @Resource
+    private UserRoleMapper userRoleMapper;
 
-    @Resource private PasswordEncoder passwordEncoder;
+    @Resource
+    private PasswordEncoder passwordEncoder;
     // private final OrganizerNotificationPublisher organizerNotificationPublisher;
 
     public static final String ORGANIZER_REMARK = "Organizer account";
@@ -233,5 +239,25 @@ public class RegServiceImpl implements RegService {
             throw exception(REG_FAIL);
         }
         return isSuccess;
+    }
+
+    @Override
+    @Transactional
+    public boolean registerAsOrganizer(SsoRegOrganizerReqVO ssoRegOrganizerReqVO) {
+        //TODO Verify JWT signature
+        JWT jwtToken = JWTUtil.parseToken(ssoRegOrganizerReqVO.getJwtToken());
+        String email = jwtToken.getPayload("email").toString();
+        String name = jwtToken.getPayload("name").toString();
+        RegOrganizerReqVO regOrganizerReqVO = RegOrganizerReqVO.builder()
+                .name(name)
+                .username(email)
+                .userEmail(email)
+                .mobile(ssoRegOrganizerReqVO.getMobile())
+                .organizationName(ssoRegOrganizerReqVO.getOrganizationName())
+                .organizationAddress(ssoRegOrganizerReqVO.getOrganizationAddress())
+                .organizationCode(ssoRegOrganizerReqVO.getOrganizationCode())
+                .userPassword("Pass@123")
+                .build();
+        return this.registerAsOrganizer(regOrganizerReqVO);
     }
 }

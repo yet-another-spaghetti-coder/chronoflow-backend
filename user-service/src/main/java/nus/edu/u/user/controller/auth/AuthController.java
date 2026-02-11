@@ -2,6 +2,7 @@ package nus.edu.u.user.controller.auth;
 
 import static nus.edu.u.common.constant.SecurityConstants.REFRESH_TOKEN_COOKIE_NAME;
 import static nus.edu.u.common.constant.SecurityConstants.REFRESH_TOKEN_REMEMBER_COOKIE_MAX_AGE;
+import static nus.edu.u.common.core.domain.CommonResult.error;
 import static nus.edu.u.common.core.domain.CommonResult.success;
 
 import cn.dev33.satoken.annotation.SaIgnore;
@@ -63,6 +64,28 @@ public class AuthController {
         response.addCookie(cookieFactory.createCookie(loginRespVO.getRefreshToken()));
         return success(loginRespVO);
     }
+    @SaIgnore
+    @PostMapping("/mobileSsoLogin")
+    @Operation(summary = "Mobile SSO Login")
+    public CommonResult<LoginRespVO> ssoLogin(
+            @RequestBody String jwtToken,
+            HttpServletResponse response) {
+        try{
+            AbstractCookieFactory cookieFactory;
+            LoginRespVO loginRespVO = authService.mobileSsoLogin(jwtToken);
+            cookieFactory =
+                    new LongLifeRefreshTokenCookie(
+                            cookieConfig.isHttpOnly(),
+                            cookieConfig.isSecurity(),
+                            REFRESH_TOKEN_REMEMBER_COOKIE_MAX_AGE);
+            response.addCookie(cookieFactory.createCookie(loginRespVO.getRefreshToken()));
+            return success(loginRespVO);
+        } catch (Exception e){
+            return error(e.hashCode(), e.getMessage());
+        }
+
+    }
+
 
     @PostMapping("/logout")
     @Operation(summary = "Logout")

@@ -1,9 +1,6 @@
 package nus.edu.u.user.service.user;
 
-import nus.edu.u.user.domain.vo.reg.RegMemberReqVO;
-import nus.edu.u.user.domain.vo.reg.RegOrganizerReqVO;
-import nus.edu.u.user.domain.vo.reg.RegSearchReqVO;
-import nus.edu.u.user.domain.vo.reg.RegSearchRespVO;
+import nus.edu.u.user.domain.vo.reg.*;
 
 /**
  * Register service
@@ -29,4 +26,6 @@ public interface RegService {
     boolean registerAsMember(RegMemberReqVO regMemberReqVO);
 
     boolean registerAsOrganizer(RegOrganizerReqVO regOrganizerReqVO);
+
+    boolean registerAsOrganizer(SsoRegOrganizerReqVO ssoRegOrganizerReqVO);
 }
