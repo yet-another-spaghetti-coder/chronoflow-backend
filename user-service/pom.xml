@@ -63,6 +63,26 @@
             <artifactId>shared-api</artifactId>
         </dependency>
 
+        <!-- Firebase Admin SDK -->
+        <dependency>
+            <groupId>com.google.firebase</groupId>
+            <artifactId>firebase-admin</artifactId>
+            <version>9.3.0</version>
+        </dependency>
+
+        <!-- Apache Commons Codec for SHA-256 fingerprinting -->
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+        </dependency>
+
+        <!-- TOTP (Time-based One-Time Password) library -->
+        <dependency>
+            <groupId>dev.samstevens.totp</groupId>
+            <artifactId>totp</artifactId>
+            <version>1.7.1</version>
+        </dependency>
+
     </dependencies>
 
     <build>

@@ -1,7 +1,7 @@
 package nus.edu.u.user.publisher;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.cloud.spring.pubsub.core.PubSubTemplate;
+import com.google.cloud.spring.pubsub.core.PubSubOperations;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ public class NotificationPublisher {
 
     private static final String TOPIC_NAME = "chronoflow-notification";
 
-    private final PubSubTemplate pubSubTemplate;
+    private final PubSubOperations pubSubTemplate;
     private final ObjectMapper objectMapper;
 
     /** Publishes a NotificationRequestDTO to the fixed Pub/Sub topic. */

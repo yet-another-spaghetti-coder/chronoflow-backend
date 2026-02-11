@@ -25,6 +25,7 @@ import nus.edu.u.user.domain.dto.UserRoleDTO;
 import nus.edu.u.user.domain.dto.UserTokenDTO;
 import nus.edu.u.user.domain.vo.auth.LoginReqVO;
 import nus.edu.u.user.domain.vo.auth.LoginRespVO;
+import nus.edu.u.user.domain.vo.auth.TotpSetupRespVO;
 import nus.edu.u.user.domain.vo.auth.UserVO;
 import nus.edu.u.user.domain.vo.role.RoleRespVO;
 import nus.edu.u.user.service.role.RoleService;
@@ -46,6 +47,8 @@ public class AuthServiceImpl implements AuthService {
     @Resource private TokenService tokenService;
 
     @Resource private RoleService roleService;
+
+    @Resource private TotpService totpService;
 
     @Override
     public UserDO authenticate(String username, String password) {
@@ -69,9 +72,17 @@ public class AuthServiceImpl implements AuthService {
     public LoginRespVO login(LoginReqVO reqVO) {
         // 1.Verify username and password
         UserDO userDO = authenticate(reqVO.getUsername(), reqVO.getPassword());
-        // 2.Update user login time
+        // 2.Check if TOTP is enabled - require MFA
+        if (Boolean.TRUE.equals(userDO.getTotpEnabled())) {
+            String mfaToken = totpService.createMfaToken(userDO.getId(), reqVO.isRemember());
+            return LoginRespVO.builder()
+                    .mfaRequired(true)
+                    .mfaToken(mfaToken)
+                    .build();
+        }
+        // 3.Update user login time
         userDO.setLoginTime(LocalDateTime.now());
-        // 3.Create token
+        // 4.Create token
         return handleLogin(userDO, reqVO.isRemember(), reqVO.getRefreshToken());
     }
 
@@ -155,5 +166,94 @@ public class AuthServiceImpl implements AuthService {
                 .user(userVO)
                 .roles(roleRespVOList)
                 .build();
+    }
+
+    @Override
+    public LoginRespVO verifyTotpAndLogin(String mfaToken, String totpCode) {
+        // 1. Validate MFA token
+        TotpService.MfaTokenData tokenData = totpService.consumeMfaToken(mfaToken);
+        if (tokenData == null) {
+            throw exception(AUTH_LOGIN_BAD_CREDENTIALS);
+        }
+
+        // 2. Get user and verify TOTP code (bypass tenant filter since user not logged in yet)
+        UserDO userDO = userService.selectUserByIdWithoutTenant(tokenData.userId());
+        if (userDO == null || !Boolean.TRUE.equals(userDO.getTotpEnabled())) {
+            throw exception(AUTH_LOGIN_BAD_CREDENTIALS);
+        }
+
+        if (!totpService.verifyCode(userDO.getTotpSecret(), totpCode)) {
+            throw exception(AUTH_LOGIN_BAD_CREDENTIALS);
+        }
+
+        // 3. TOTP verified - complete login
+        userDO.setLoginTime(LocalDateTime.now());
+        return handleLogin(userDO, tokenData.rememberMe(), null);
+    }
+
+    @Override
+    public TotpSetupRespVO setupTotp() {
+        Long userId = StpUtil.getLoginIdAsLong();
+        UserDO userDO = userService.selectUserById(userId);
+        if (userDO == null) {
+            throw exception(ACCOUNT_ERROR);
+        }
+
+        String secret = totpService.generateSecret();
+        String email = userDO.getEmail();
+        String qrCodeDataUri = totpService.generateQrCodeDataUri(secret, email);
+        String totpUri = totpService.generateTotpUri(secret, email);
+
+        return TotpSetupRespVO.builder()
+                .secret(secret)
+                .qrCodeDataUri(qrCodeDataUri)
+                .totpUri(totpUri)
+                .build();
+    }
+
+    @Override
+    public boolean enableTotp(String secret, String code) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        UserDO userDO = userService.selectUserById(userId);
+        if (userDO == null) {
+            throw exception(ACCOUNT_ERROR);
+        }
+
+        // Verify the code before enabling
+        if (!totpService.verifyCode(secret, code)) {
+            throw exception(AUTH_LOGIN_BAD_CREDENTIALS);
+        }
+
+        // Save secret and enable TOTP
+        userService.enableTotp(userId, secret);
+        return true;
+    }
+
+    @Override
+    public boolean disableTotp(String code) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        UserDO userDO = userService.selectUserById(userId);
+        if (userDO == null) {
+            throw exception(ACCOUNT_ERROR);
+        }
+
+        if (!Boolean.TRUE.equals(userDO.getTotpEnabled())) {
+            return true; // Already disabled
+        }
+
+        // Verify the code before disabling
+        if (!totpService.verifyCode(userDO.getTotpSecret(), code)) {
+            throw exception(AUTH_LOGIN_BAD_CREDENTIALS);
+        }
+
+        userService.disableTotp(userId);
+        return true;
+    }
+
+    @Override
+    public boolean isTotpEnabled() {
+        Long userId = StpUtil.getLoginIdAsLong();
+        UserDO userDO = userService.selectUserById(userId);
+        return userDO != null && Boolean.TRUE.equals(userDO.getTotpEnabled());
     }
 }

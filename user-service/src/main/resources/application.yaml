@@ -213,6 +213,13 @@ management:
 chronoflow:
   security:
     refresh-token-expire: 604800
+    rate-limit:
+      max-attempts: 10
+      window-seconds: 900
   cookie:
     http-only: true
     security: false
+  firebase:
+    enabled: ${FIREBASE_ENABLED:true}
+    credentials-base64: ${FIREBASE_SERVICE_ACCOUNT_JSON:}
+    project-id: ${FIREBASE_PROJECT_ID:chronoflow-noti-service}

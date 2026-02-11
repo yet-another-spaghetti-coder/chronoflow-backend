@@ -43,6 +43,14 @@ public interface UserService {
 
     UserDO selectUserById(Long userId);
 
+    /**
+     * Select user by ID without tenant filtering (for MFA verification)
+     *
+     * @param userId User ID
+     * @return UserDO or null if not found
+     */
+    UserDO selectUserByIdWithoutTenant(Long userId);
+
     Long createUserWithRoleIds(CreateUserDTO dto);
 
     UserDO updateUserWithRoleIds(UpdateUserDTO dto);
@@ -69,4 +77,58 @@ public interface UserService {
     List<UserProfileRespVO> getEnabledUserProfiles();
 
     List<UserPermissionDTO> getUserPermissions(Long userId);
+
+    // Firebase Authentication methods
+
+    /**
+     * Get user by Firebase UID
+     *
+     * @param firebaseUid Firebase UID
+     * @return UserDO or null if not found
+     */
+    UserDO getUserByFirebaseUid(String firebaseUid);
+
+    /**
+     * Get user by email
+     *
+     * @param email User email
+     * @return UserDO or null if not found
+     */
+    UserDO getUserByEmail(String email);
+
+    /**
+     * Update user's Firebase UID
+     *
+     * @param userId User ID
+     * @param firebaseUid Firebase UID
+     */
+    void updateFirebaseUid(Long userId, String firebaseUid);
+
+    /**
+     * Create a new user from Firebase authentication
+     *
+     * @param firebaseUid Firebase UID
+     * @param email User email
+     * @param name User display name
+     * @param organizationName Organization name (optional)
+     * @return Created UserDO
+     */
+    UserDO createUserFromFirebase(String firebaseUid, String email, String name, String organizationName);
+
+    // TOTP methods
+
+    /**
+     * Enable TOTP for a user
+     *
+     * @param userId User ID
+     * @param totpSecret TOTP secret key
+     */
+    void enableTotp(Long userId, String totpSecret);
+
+    /**
+     * Disable TOTP for a user
+     *
+     * @param userId User ID
+     */
+    void disableTotp(Long userId);
 }
