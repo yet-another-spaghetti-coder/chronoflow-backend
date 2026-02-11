@@ -27,4 +27,6 @@ public class SecurityConstants {
 
     /** Refresh token cookie max age for remember choice */
     public static final int REFRESH_TOKEN_REMEMBER_COOKIE_MAX_AGE = 7 * 24 * 60 * 60;
+
+    public static final String MOBILE_SSO_JWT_ISSUER = "https://accounts.google.com";
 }
