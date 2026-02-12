@@ -386,6 +386,7 @@
                         <source>${java.version}</source>
                         <target>${java.version}</target>
                         <fork>true</fork>
+                        <parameters>true</parameters>
                         <annotationProcessorPaths>
                             <!-- MapStruct 注解处理器 -->
                             <path>

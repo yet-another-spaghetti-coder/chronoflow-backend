@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.enums.CommonStatusEnum;
+import nus.edu.u.framework.security.audit.SecurityAuditLogger;
+import nus.edu.u.framework.security.audit.SecurityAuditLogger.SecurityEvent;
 import nus.edu.u.user.domain.dataobject.user.UserDO;
 import nus.edu.u.user.domain.dto.RoleDTO;
 import nus.edu.u.user.domain.dto.UserPermissionDTO;
@@ -50,19 +52,26 @@ public class AuthServiceImpl implements AuthService {
 
     @Resource private TotpService totpService;
 
+    @Resource private SecurityAuditLogger auditLogger;
+
     @Override
     public UserDO authenticate(String username, String password) {
         // 1.Check username first
         UserDO userDO = userService.getUserByUsername(username);
         if (userDO == null) {
+            auditLogger.log(SecurityEvent.LOGIN_FAILED_BAD_CREDENTIALS, null, null, username);
             throw exception(AUTH_LOGIN_BAD_CREDENTIALS);
         }
         // 2.Check password
         if (!userService.isPasswordMatch(password, userDO.getPassword())) {
+            auditLogger.log(SecurityEvent.LOGIN_FAILED_BAD_CREDENTIALS,
+                    userDO.getId().toString(), null, username);
             throw exception(AUTH_LOGIN_BAD_CREDENTIALS);
         }
         // 3.Check if user is disabled
         if (CommonStatusEnum.isDisable(userDO.getStatus())) {
+            auditLogger.log(SecurityEvent.LOGIN_FAILED_ACCOUNT_DISABLED,
+                    userDO.getId().toString(), null, username);
             throw exception(AUTH_LOGIN_USER_DISABLED);
         }
         return userDO;
@@ -99,13 +108,22 @@ public class AuthServiceImpl implements AuthService {
         if (StrUtil.isEmpty(refreshToken)) {
             refreshToken = tokenService.createRefreshToken(userTokenDTO);
         }
+        auditLogger.log(SecurityEvent.LOGIN_SUCCESS,
+                userDO.getId().toString(), null, userDO.getUsername());
         return getInfo(refreshToken);
     }
 
     @Override
     public void logout(String token) {
+        String userId = null;
+        try {
+            if (StpUtil.isLogin()) {
+                userId = StpUtil.getLoginIdAsString();
+            }
+        } catch (Exception ignored) {}
         tokenService.removeToken(token);
         StpUtil.logout();
+        auditLogger.log(SecurityEvent.LOGOUT, userId, null, null);
     }
 
     @Override

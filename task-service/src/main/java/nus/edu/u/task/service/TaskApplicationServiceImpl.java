@@ -19,6 +19,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import nus.edu.u.framework.security.audit.AuditType;
+import nus.edu.u.framework.security.audit.Auditable;
 import nus.edu.u.shared.rpc.events.EventRespDTO;
 import nus.edu.u.shared.rpc.events.EventRpcService;
 import nus.edu.u.shared.rpc.group.GroupDTO;
@@ -68,6 +70,8 @@ public class TaskApplicationServiceImpl implements TaskApplicationService {
 
     @Override
     @Transactional
+    @Auditable(operation = "Create Task", type = AuditType.DATA_CHANGE,
+               targetType = "Task", targetId = "#eventId")
     public TaskRespVO createTask(Long eventId, TaskCreateReqVO reqVO) {
         EventRespDTO event = eventRpcService.getEvent(eventId);
         if (event == null) {
@@ -145,6 +149,8 @@ public class TaskApplicationServiceImpl implements TaskApplicationService {
 
     @Override
     @Transactional
+    @Auditable(operation = "Update Task", type = AuditType.DATA_CHANGE,
+               targetType = "Task", targetId = "#taskId")
     public TaskRespVO updateTask(Long eventId, Long taskId, TaskUpdateReqVO reqVO, Integer type) {
         EventRespDTO event = eventRpcService.getEvent(eventId);
         if (event == null) {
@@ -238,6 +244,8 @@ public class TaskApplicationServiceImpl implements TaskApplicationService {
 
     @Override
     @Transactional
+    @Auditable(operation = "Delete Task", type = AuditType.DATA_CHANGE,
+               targetType = "Task", targetId = "#taskId")
     public void deleteTask(Long eventId, Long taskId) {
         EventRespDTO event = eventRpcService.getEvent(eventId);
         if (event == null) {

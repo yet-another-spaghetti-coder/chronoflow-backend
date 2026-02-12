@@ -13,6 +13,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.enums.CommonStatusEnum;
+import nus.edu.u.framework.security.audit.AuditType;
+import nus.edu.u.framework.security.audit.Auditable;
 import nus.edu.u.user.domain.dataobject.permission.PermissionDO;
 import nus.edu.u.user.domain.dataobject.role.RoleDO;
 import nus.edu.u.user.domain.dataobject.role.RolePermissionDO;
@@ -73,6 +75,8 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional
+    @Auditable(operation = "Create Role", type = AuditType.ADMIN_ACTION,
+               targetType = "Role", targetId = "#roleReqVO.key")
     public RoleRespVO createRole(RoleReqVO roleReqVO) {
         List<RoleDO> existRole =
                 roleMapper.selectList(
@@ -134,6 +138,8 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Transactional
+    @Auditable(operation = "Delete Role", type = AuditType.ADMIN_ACTION,
+               targetType = "Role", targetId = "#roleId")
     public void deleteRole(Long roleId) {
         if (ObjUtil.isNull(roleId)) {
             throw exception(BAD_REQUEST);
@@ -159,6 +165,8 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional
+    @Auditable(operation = "Update Role", type = AuditType.ADMIN_ACTION,
+               targetType = "Role", targetId = "#roleId")
     public RoleRespVO updateRole(Long roleId, RoleReqVO roleReqVO) {
         if (ObjUtil.isNull(roleId) || ObjUtil.isNull(roleReqVO)) {
             throw exception(BAD_REQUEST);
@@ -224,6 +232,8 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional
+    @Auditable(operation = "Assign Roles", type = AuditType.ADMIN_ACTION,
+               targetType = "UserRole", targetId = "#reqVO.userId")
     public void assignRoles(RoleAssignReqVO reqVO) {
         if (Objects.isNull(reqVO)) {
             throw exception(BAD_REQUEST);

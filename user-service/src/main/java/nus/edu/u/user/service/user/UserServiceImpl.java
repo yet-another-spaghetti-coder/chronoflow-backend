@@ -14,6 +14,8 @@ import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.enums.CommonStatusEnum;
+import nus.edu.u.framework.security.audit.AuditType;
+import nus.edu.u.framework.security.audit.Auditable;
 import nus.edu.u.common.exception.ServiceException;
 import nus.edu.u.shared.rpc.notification.dto.member.RegSearchReqDTO;
 import nus.edu.u.user.domain.dataobject.tenant.TenantDO;
@@ -91,6 +93,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @Auditable(operation = "Create User", type = AuditType.ADMIN_ACTION,
+               targetType = "User", excludeFields = {"password"})
     public Long createUserWithRoleIds(CreateUserDTO dto) {
         String email = dto.getEmail().trim();
         // Filter out roleId=1 (admin) and remove duplicates
@@ -148,6 +152,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @Auditable(operation = "Update User", type = AuditType.ADMIN_ACTION,
+               targetType = "User", targetId = "#dto.id", excludeFields = {"password"})
     public UserDO updateUserWithRoleIds(UpdateUserDTO dto) {
         UserDO dbUser = userMapper.selectById(dto.getId());
         if (dbUser == null || Boolean.TRUE.equals(dbUser.getDeleted())) {
@@ -187,6 +193,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @Auditable(operation = "Soft Delete User", type = AuditType.ADMIN_ACTION,
+               targetType = "User", targetId = "#id")
     public void softDeleteUser(Long id) {
         UserDO db = userMapper.selectRawById(id);
         if (db == null) {
@@ -208,6 +216,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @Auditable(operation = "Restore User", type = AuditType.ADMIN_ACTION,
+               targetType = "User", targetId = "#id")
     public void restoreUser(Long id) {
         // 1) Check if the user exists and has been deleted
         UserDO db = userMapper.selectRawById(id);
@@ -233,6 +243,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @Auditable(operation = "Disable User", type = AuditType.ADMIN_ACTION,
+               targetType = "User", targetId = "#id")
     public void disableUser(Long id) {
         UserDO db = userMapper.selectById(id);
         if (db == null || Boolean.TRUE.equals(db.getDeleted())) {
@@ -256,6 +268,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @Auditable(operation = "Enable User", type = AuditType.ADMIN_ACTION,
+               targetType = "User", targetId = "#id")
     public void enableUser(Long id) {
         UserDO db = userMapper.selectById(id);
         if (db == null || Boolean.TRUE.equals(db.getDeleted())) {

@@ -11,6 +11,8 @@ import jakarta.annotation.Resource;
 import java.util.List;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
+import nus.edu.u.framework.security.audit.AuditType;
+import nus.edu.u.framework.security.audit.Auditable;
 import nus.edu.u.user.domain.dataobject.permission.PermissionDO;
 import nus.edu.u.user.domain.dataobject.role.RolePermissionDO;
 import nus.edu.u.user.domain.vo.permission.PermissionReqVO;
@@ -44,6 +46,8 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
+    @Auditable(operation = "Create Permission", type = AuditType.ADMIN_ACTION,
+               targetType = "Permission", targetId = "#permissionReqVO.key")
     public Long createPermission(PermissionReqVO permissionReqVO) {
         if (Objects.isNull(permissionReqVO)) {
             throw exception(BAD_REQUEST);
@@ -71,6 +75,8 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
+    @Auditable(operation = "Update Permission", type = AuditType.ADMIN_ACTION,
+               targetType = "Permission", targetId = "#id")
     public PermissionRespVO updatePermission(Long id, PermissionReqVO reqVO) {
         if (ObjUtil.isNull(id) || ObjUtil.isNull(reqVO)) {
             throw exception(BAD_REQUEST);
@@ -94,6 +100,8 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
+    @Auditable(operation = "Delete Permission", type = AuditType.ADMIN_ACTION,
+               targetType = "Permission", targetId = "#id")
     public Boolean deletePermission(Long id) {
         if (ObjUtil.isNull(id)) {
             throw exception(BAD_REQUEST);

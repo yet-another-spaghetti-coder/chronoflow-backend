@@ -21,6 +21,8 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.enums.EventStatusEnum;
+import nus.edu.u.framework.security.audit.AuditType;
+import nus.edu.u.framework.security.audit.Auditable;
 import nus.edu.u.event.convert.EventConvert;
 import nus.edu.u.event.domain.dataobject.event.EventDO;
 import nus.edu.u.event.domain.dataobject.user.UserGroupDO;
@@ -62,6 +64,7 @@ public class EventApplicationServiceImpl implements EventApplicationService {
     private TaskRpcService taskRpcService;
 
     @Override
+    @Auditable(operation = "Create Event", type = AuditType.DATA_CHANGE, targetType = "Event")
     public EventRespVO createEvent(EventCreateReqVO reqVO) {
         runValidations(EventValidationContext.forCreate(reqVO));
         EventDO event = prepareForCreate(reqVO);
@@ -161,6 +164,8 @@ public class EventApplicationServiceImpl implements EventApplicationService {
     }
 
     @Override
+    @Auditable(operation = "Update Event", type = AuditType.DATA_CHANGE,
+               targetType = "Event", targetId = "#id")
     public UpdateEventRespVO updateEvent(Long id, EventUpdateReqVO reqVO) {
         EventDO current = eventMapper.selectById(id);
         if (current == null) {
@@ -182,6 +187,8 @@ public class EventApplicationServiceImpl implements EventApplicationService {
     }
 
     @Override
+    @Auditable(operation = "Delete Event", type = AuditType.DATA_CHANGE,
+               targetType = "Event", targetId = "#id")
     public boolean deleteEvent(Long id) {
         EventDO db = eventMapper.selectById(id);
         if (db == null) {
@@ -207,6 +214,8 @@ public class EventApplicationServiceImpl implements EventApplicationService {
     }
 
     @Override
+    @Auditable(operation = "Restore Event", type = AuditType.DATA_CHANGE,
+               targetType = "Event", targetId = "#id")
     public boolean restoreEvent(Long id) {
         EventDO db = eventMapper.selectRawById(id);
         if (db == null) {
