@@ -25,4 +25,10 @@ public class LoginRespVO {
     private List<RoleRespVO> roles;
 
     @JsonIgnore private String refreshToken;
+
+    @Schema(description = "Whether MFA verification is required")
+    private Boolean mfaRequired;
+
+    @Schema(description = "Temporary token for MFA verification (only present if mfaRequired is true)")
+    private String mfaToken;
 }

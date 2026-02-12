@@ -22,8 +22,17 @@
     <resultMap id="UserDOMap" type="nus.edu.u.user.domain.dataobject.user.UserDO">
         <id    property="id"         column="id"/>
         <result property="username"  column="username"/>
+        <result property="password"  column="password"/>
+        <result property="remark"    column="remark"/>
         <result property="email"     column="email"/>
+        <result property="phone"     column="phone"/>
         <result property="status"    column="status"/>
+        <result property="loginTime" column="login_time"/>
+        <result property="deptId"    column="dept_id"/>
+        <result property="tenantId"  column="tenant_id"/>
+        <result property="firebaseUid" column="firebase_uid"/>
+        <result property="totpSecret" column="totp_secret"/>
+        <result property="totpEnabled" column="totp_enabled"/>
     </resultMap>
 
     <update id="updateByIdWithoutTenant" parameterType="nus.edu.u.user.domain.dataobject.user.UserDO">
@@ -152,7 +161,10 @@
             login_time,
             dept_id,
             post_list,
-            tenant_id
+            tenant_id,
+            firebase_uid,
+            totp_secret,
+            totp_enabled
         FROM sys_user
         WHERE username = #{username}
           AND deleted = 0
@@ -169,7 +181,10 @@
             login_time,
             dept_id,
             post_list,
-            tenant_id
+            tenant_id,
+            firebase_uid,
+            totp_secret,
+            totp_enabled
         FROM sys_user
         WHERE id = #{id}
           AND deleted = 0

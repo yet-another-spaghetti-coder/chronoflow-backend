@@ -128,6 +128,10 @@ gateway:
   white-list:
     - /users/auth/login
     - /users/auth/refresh
+    - /users/auth/firebase-login
+    - /users/auth/firebase-register
+    - /users/auth/firebase-refresh
+    - /users/auth/totp/verify
     - /users/reg/**
     - /ws
     - /ws/internal/**
@@ -136,6 +140,7 @@ gateway:
     - /favicon.ico
     - /v3/**
     - /*/v3/**
+    - /actuator/health
 
 ############## Sa-Token config (文档: https://sa-token.cc) ##############
 sa-token:

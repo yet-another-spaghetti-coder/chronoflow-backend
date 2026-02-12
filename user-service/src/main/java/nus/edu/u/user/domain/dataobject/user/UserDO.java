@@ -53,4 +53,13 @@ public class UserDO extends TenantBaseDO implements Serializable {
 
     @TableField(typeHandler = JacksonTypeHandler.class, value = "post_list")
     private List<Integer> postList;
+
+    /** Firebase Authentication User UID */
+    private String firebaseUid;
+
+    /** TOTP secret key (encrypted) for two-factor authentication */
+    private String totpSecret;
+
+    /** Whether TOTP is enabled for this user */
+    private Boolean totpEnabled;
 }

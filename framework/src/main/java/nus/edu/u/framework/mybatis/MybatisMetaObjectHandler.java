@@ -1,6 +1,7 @@
 package nus.edu.u.framework.mybatis;
 
 import static nus.edu.u.framework.mybatis.MybatisPlusConfig.getCurrentTenantId;
+import static nus.edu.u.framework.mybatis.MybatisPlusConfig.isTenantFilterBypassed;
 
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -31,7 +32,11 @@ public class MybatisMetaObjectHandler implements MetaObjectHandler {
         if (metaObject.hasSetter("tenantId")) {
             Object tenantId = metaObject.getValue("tenantId");
             if (ObjectUtil.isNull(tenantId)) {
-                this.strictInsertFill(metaObject, "tenant_id", Long.class, getCurrentTenantId());
+                // Skip auto-fill if tenant filter is bypassed (e.g., during Firebase registration)
+                // The caller is responsible for setting tenant_id explicitly in this case
+                if (!isTenantFilterBypassed()) {
+                    this.strictInsertFill(metaObject, "tenant_id", Long.class, getCurrentTenantId());
+                }
             }
         }
         this.strictInsertFill(metaObject, "deleted", Boolean.class, false);

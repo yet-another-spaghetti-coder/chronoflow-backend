@@ -42,3 +42,19 @@ logs/
 mongo_data
 
 mysql/data
+
+# Claude Code
+.claude/
+
+# Windows artifacts
+nul
+
+# Log files
+*.log
+
+# Local dev scripts (optional - remove if you want to share)
+run-*.ps1
+run-*.bat
+
+# Fake credentials
+fake-gcp-credentials.json

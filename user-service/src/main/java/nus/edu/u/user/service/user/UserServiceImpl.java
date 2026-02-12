@@ -16,9 +16,12 @@ import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.common.exception.ServiceException;
 import nus.edu.u.shared.rpc.notification.dto.member.RegSearchReqDTO;
+import nus.edu.u.user.domain.dataobject.tenant.TenantDO;
+import nus.edu.u.user.domain.dataobject.role.RoleDO;
 import nus.edu.u.user.domain.dataobject.user.UserDO;
 import nus.edu.u.user.domain.dataobject.user.UserRoleDO;
 import nus.edu.u.user.domain.dto.*;
+import nus.edu.u.user.mapper.tenant.TenantMapper;
 import nus.edu.u.user.domain.vo.user.BulkUpsertUsersRespVO;
 import nus.edu.u.user.domain.vo.user.UserProfileRespVO;
 import nus.edu.u.user.enums.user.UserStatusEnum;
@@ -49,6 +52,8 @@ public class UserServiceImpl implements UserService {
 
     @Resource private RoleMapper roleMapper;
 
+    @Resource private TenantMapper tenantMapper;
+
     @Resource private PasswordEncoder passwordEncoder;
 
     // Self-injection proxy to avoid transaction enhancement failure caused by internal calls of
@@ -77,6 +82,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDO selectUserById(Long userId) {
         return userMapper.selectById(userId);
+    }
+
+    @Override
+    public UserDO selectUserByIdWithoutTenant(Long userId) {
+        return userMapper.selectByIdWithoutTenant(userId);
     }
 
     @Override
@@ -512,5 +522,158 @@ public class UserServiceImpl implements UserService {
             throw exception(ROLE_NOT_FOUND);
         }
         return roleIds;
+    }
+
+    // ==================== Firebase Authentication Methods ====================
+
+    @Override
+    public UserDO getUserByFirebaseUid(String firebaseUid) {
+        if (firebaseUid == null || firebaseUid.isBlank()) {
+            return null;
+        }
+        return userMapper.selectOne(
+                Wrappers.<UserDO>lambdaQuery().eq(UserDO::getFirebaseUid, firebaseUid));
+    }
+
+    @Override
+    public UserDO getUserByEmail(String email) {
+        if (email == null || email.isBlank()) {
+            return null;
+        }
+        return userMapper.selectOne(
+                Wrappers.<UserDO>lambdaQuery().eq(UserDO::getEmail, email.trim().toLowerCase()));
+    }
+
+    @Override
+    @Transactional
+    public void updateFirebaseUid(Long userId, String firebaseUid) {
+        int rows =
+                userMapper.update(
+                        new UserDO(),
+                        Wrappers.<UserDO>lambdaUpdate()
+                                .set(UserDO::getFirebaseUid, firebaseUid)
+                                .eq(UserDO::getId, userId));
+        if (rows <= 0) {
+            throw exception(UPDATE_FAILURE);
+        }
+    }
+
+    @Override
+    @Transactional
+    public UserDO createUserFromFirebase(
+            String firebaseUid, String email, String name, String organizationName) {
+        // Check if email already exists
+        if (userMapper.existsEmail(email, null)) {
+            throw exception(EMAIL_EXIST);
+        }
+
+        // Generate unique username
+        String username = generateUniqueUsername(name, email);
+
+        // Create tenant first (required for multi-tenant system)
+        TenantDO tenant =
+                TenantDO.builder()
+                        .name(organizationName != null ? organizationName : name + "'s Organization")
+                        .contactName(name)
+                        .build();
+        if (tenantMapper.insert(tenant) <= 0) {
+            throw exception(USER_INSERT_FAILURE);
+        }
+
+        // Create user with Firebase credentials
+        UserDO user =
+                UserDO.builder()
+                        .firebaseUid(firebaseUid)
+                        .email(email.trim().toLowerCase())
+                        .username(username)
+                        .status(CommonStatusEnum.ENABLE.getStatus())
+                        .build();
+        user.setTenantId(tenant.getId());
+
+        if (userMapper.insert(user) <= 0) {
+            throw exception(USER_INSERT_FAILURE);
+        }
+
+        // Update tenant with contact user ID
+        tenant.setContactUserId(user.getId());
+        tenantMapper.updateById(tenant);
+
+        // Create ORGANIZER role in the new tenant
+        RoleDO role = RoleDO.builder()
+                .name("Organizer")
+                .roleKey("ORGANIZER")
+                .permissionList(List.of(1971465366969307138L)) // All permission
+                .status(CommonStatusEnum.ENABLE.getStatus())
+                .build();
+        role.setTenantId(tenant.getId());
+        if (roleMapper.insert(role) <= 0) {
+            throw exception(USER_INSERT_FAILURE);
+        }
+
+        // Assign user to the ORGANIZER role
+        UserRoleDO userRole =
+                UserRoleDO.builder().userId(user.getId()).roleId(role.getId()).build();
+        userRole.setTenantId(tenant.getId());
+        userRoleMapper.insert(userRole);
+
+        log.info(
+                "Created user from Firebase: userId={}, email={}, firebaseUid={}, tenantId={}",
+                user.getId(),
+                email,
+                firebaseUid,
+                tenant.getId());
+
+        return user;
+    }
+
+    /**
+     * Generate a unique username based on display name and email.
+     * If display name is taken, try email prefix, then append random suffix.
+     */
+    private String generateUniqueUsername(String displayName, String email) {
+        // Try display name first
+        if (displayName != null && !displayName.isBlank()) {
+            if (userMapper.selectByUsername(displayName) == null) {
+                return displayName;
+            }
+        }
+
+        // Try email prefix (part before @)
+        String emailPrefix = email.split("@")[0];
+        if (userMapper.selectByUsername(emailPrefix) == null) {
+            return emailPrefix;
+        }
+
+        // Append random suffix to make it unique
+        String baseUsername = displayName != null && !displayName.isBlank() ? displayName : emailPrefix;
+        String uniqueUsername;
+        int attempts = 0;
+        do {
+            String suffix = String.valueOf(System.currentTimeMillis() % 10000);
+            uniqueUsername = baseUsername + "_" + suffix;
+            attempts++;
+        } while (userMapper.selectByUsername(uniqueUsername) != null && attempts < 10);
+
+        return uniqueUsername;
+    }
+
+    @Override
+    public void enableTotp(Long userId, String totpSecret) {
+        LambdaUpdateWrapper<UserDO> wrapper = Wrappers.lambdaUpdate(UserDO.class)
+                .eq(UserDO::getId, userId)
+                .set(UserDO::getTotpSecret, totpSecret)
+                .set(UserDO::getTotpEnabled, true);
+        userMapper.update(null, wrapper);
+        log.info("TOTP enabled for userId={}", userId);
+    }
+
+    @Override
+    public void disableTotp(Long userId) {
+        LambdaUpdateWrapper<UserDO> wrapper = Wrappers.lambdaUpdate(UserDO.class)
+                .eq(UserDO::getId, userId)
+                .set(UserDO::getTotpSecret, null)
+                .set(UserDO::getTotpEnabled, false);
+        userMapper.update(null, wrapper);
+        log.info("TOTP disabled for userId={}", userId);
     }
 }
