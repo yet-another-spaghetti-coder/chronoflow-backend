@@ -2,14 +2,13 @@ package nus.edu.u.domain.dataObject.common;
 
 import jakarta.persistence.*;
 import java.util.UUID;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+
+import lombok.*;
 import nus.edu.u.enums.common.NotificationChannel;
 import nus.edu.u.enums.common.NotificationEventType;
 import nus.edu.u.enums.common.NotificationStatus;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
 @Builder
 @NoArgsConstructor

@@ -57,7 +57,8 @@ import org.springframework.util.CollectionUtils;
 @Slf4j
 public class GroupApplicationServiceImpl implements GroupApplicationService {
 
-    @DubboReference private UserRpcService userRpcService;
+    @DubboReference(check = false)
+    private UserRpcService userRpcService;
     private final DeptMapper deptMapper;
     private final EventMapper eventMapper;
     private final UserGroupMapper userGroupMapper;

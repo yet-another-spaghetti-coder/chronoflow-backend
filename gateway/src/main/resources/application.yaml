@@ -82,21 +82,6 @@ spring:
             - Path=/notifications/**
           filters:
             - RewritePath=/notifications/v3/api-docs, /v3/api-docs
-        # websocket gateway
-        - id: ws-upgrade
-          uri: lb:ws://ws-gateway
-          predicates:
-            - Path=/ws
-            - Header=Upgrade, websocket
-          order: -10
-
-        # 2) REST under /ws/**
-        - id: ws-api
-          uri: lb://ws-gateway
-          predicates:
-            - Path=/ws/**
-          order: 0
-
       x-forwarded:
         prefix-enabled: false
 
@@ -164,8 +149,6 @@ sa-token:
   is-log: true
   # Token style
   token-style: uuid
-  cookie:
-    http-only: true
 
 # Heath check
 management:
@@ -186,9 +169,9 @@ management:
             - "*"
           exclude:
             - ${management.endpoint.health.group.readiness.include}
-    prometheus:
-      enabled: true
-  metrics:
-    export:
-      prometheus:
+    Prometheus:
+      access: unrestricted
+  Prometheus:
+    metrics:
+      export:
         enabled: true

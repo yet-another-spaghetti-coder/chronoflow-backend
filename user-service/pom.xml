@@ -13,23 +13,6 @@
     <packaging>jar</packaging>
     <name>${project.artifactId}</name>
 
-    <properties>
-        <spring.cloud.gcp.version>7.3.1</spring.cloud.gcp.version>
-    </properties>
-
-    <dependencyManagement>
-        <dependencies>
-            <!-- Spring Cloud GCP BOM -->
-            <dependency>
-                <groupId>com.google.cloud</groupId>
-                <artifactId>spring-cloud-gcp-dependencies</artifactId>
-                <version>${spring.cloud.gcp.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
     <dependencies>
 
         <dependency>
