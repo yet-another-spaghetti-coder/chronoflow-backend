@@ -126,6 +126,7 @@ dubbo:
     # This will enable application-level service discovery only (the recommended service discovery method for Dubbo3).
     # For users upgrading from Dubbo2.x, please set the value to 'all' for smooth migration.
     register-mode: instance
+    use-as-metadata-center: false
     parameters:
       namespace: ${spring.profiles.active}
   protocol:

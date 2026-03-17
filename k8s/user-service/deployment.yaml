@@ -7,7 +7,7 @@ metadata:
     app: user-service
     version: v1
 spec:
-  replicas: 2
+  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -28,13 +28,39 @@ spec:
           effect: "NoSchedule"
       containers:
         - name: user-service
-          image: e1241986/user-service:latest
+          image: shchow/user-service:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
               containerPort: 8081
               protocol: TCP
           env:
+            - name: PROD_MASTER_DB_HOST
+              value: "mysql.chronoflow.svc.cluster.local"
+            - name: PROD_MASTER_DB_PORT
+              value: "3306"
+            - name: PROD_MASTER_DB_USER
+              value: "root"
+            - name: PROD_MASTER_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql
+                  key: root-password
+            - name: PROD_SLAVE_DB_HOST
+              value: "mysql.chronoflow.svc.cluster.local"
+            - name: PROD_SLAVE_DB_PORT
+              value: "3306"
+            - name: PROD_SLAVE_DB_USER
+              value: "root"
+            - name: PROD_SLAVE_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql
+                  key: root-password
+            - name: PROD_REDIS_HOST
+              value: "redis.chronoflow.svc.cluster.local"
+            - name: PROD_REDIS_PORT
+              value: "6379"
             - name: SPRING_PROFILES_ACTIVE
               value: "prod"
             - name: JAVA_OPTS
@@ -59,6 +85,15 @@ spec:
                 configMapKeyRef:
                   name: noti-config
                   key: gcp.project.id
+            - name: FIREBASE_SERVICE_ACCOUNT_JSON
+              valueFrom:
+                secretKeyRef:
+                  name: firebase
+                  key: account-json
+            - name: MOBILE_SSO_JWKS
+              value: https://www.googleapis.com/oauth2/v3/certs
+            - name: MOBILE_CLIENT_ID
+              value: 344291036721-79prbg72kl8q5lac22kmol4arh39r5vg.apps.googleusercontent.com
           resources:
             requests:
               memory: "512Mi"

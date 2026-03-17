@@ -28,7 +28,7 @@ spec:
           effect: "NoSchedule"
       containers:
         - name: attendee-service
-          image: e1241986/attendee-service:latest
+          image: shchow/attendee-service:latest
           imagePullPolicy: Always
           ports:
             - name: http
@@ -49,6 +49,32 @@ spec:
               value: "nacos"
             - name: NACOS_PASSWORD
               value: "nacos"
+            - name: PROD_MASTER_DB_HOST
+              value: "mysql.chronoflow.svc.cluster.local"
+            - name: PROD_MASTER_DB_PORT
+              value: "3306"
+            - name: PROD_MASTER_DB_USER
+              value: "root"
+            - name: PROD_MASTER_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql
+                  key: root-password
+            - name: PROD_SLAVE_DB_HOST
+              value: "mysql.chronoflow.svc.cluster.local"
+            - name: PROD_SLAVE_DB_PORT
+              value: "3306"
+            - name: PROD_SLAVE_DB_USER
+              value: "root"
+            - name: PROD_SLAVE_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql
+                  key: root-password
+            - name: PROD_REDIS_HOST
+              value: "redis.chronoflow.svc.cluster.local"
+            - name: PROD_REDIS_PORT
+              value: "6379"
             - name: PUB_SUB_SERVICE_ACCOUNT_JSON
               valueFrom:
                 secretKeyRef:

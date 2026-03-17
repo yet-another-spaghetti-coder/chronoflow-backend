@@ -45,17 +45,6 @@ spec:
   selector:
     app: nacos
 ---
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: nacos-cm
-  namespace: chronoflow
-data:
-  mysql.host: "10.136.0.5"
-  mysql.db.name: "nacos"
-  mysql.port: "3306"
-  mysql.user: "root"
----
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -63,7 +52,7 @@ metadata:
   namespace: chronoflow
 spec:
   serviceName: nacos-headless
-  replicas: 2  # 集群建议 3 个节点
+  replicas: 1  # Use 1 for dev; set to 2+ and MODE=cluster for HA
   selector:
     matchLabels:
       app: nacos
@@ -88,11 +77,7 @@ spec:
             - name: SPRING_DATASOURCE_PLATFORM
               value: "mysql"
             - name: MODE
-              value: "cluster"
-            - name: NACOS_REPLICAS
-              value: "3"
-            - name: NACOS_SERVERS
-              value: "nacos-0.nacos-headless.chronoflow.svc.cluster.local:8848 nacos-1.nacos-headless.chronoflow.svc.cluster.local:8848 nacos-2.nacos-headless.chronoflow.svc.cluster.local:8848"
+              value: "standalone"
             - name: MYSQL_SERVICE_HOST
               valueFrom:
                 configMapKeyRef:
@@ -118,12 +103,20 @@ spec:
                 secretKeyRef:
                   name: nacos-mysql
                   key: password
+            - name: MYSQL_SERVICE_DB_PARAM
+              value: "characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useSSL=false&allowPublicKeyRetrieval=true"
             - name: NACOS_SERVER_PORT
               value: "8848"
             - name: NACOS_APPLICATION_PORT
               value: "8848"
             - name: PREFER_HOST_MODE
               value: "hostname"
+          readinessProbe:
+            httpGet:
+              path: /nacos/v1/console/health/readiness
+              port: 8848
+            initialDelaySeconds: 30
+            periodSeconds: 10
           resources:
             requests:
               memory: "1Gi"

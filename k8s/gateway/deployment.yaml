@@ -7,7 +7,7 @@ metadata:
     app: gateway
     version: v1
 spec:
-  replicas: 2
+  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -28,7 +28,7 @@ spec:
           effect: "NoSchedule"
       containers:
         - name: gateway
-          image: e1241986/gateway:latest
+          image: shchow/gateway:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -49,6 +49,10 @@ spec:
               value: "nacos"
             - name: NACOS_PASSWORD
               value: "nacos"
+            - name: PROD_REDIS_HOST
+              value: "redis.chronoflow.svc.cluster.local"
+            - name: PROD_REDIS_PORT
+              value: "6379"
           resources:
             requests:
               memory: "512Mi"
