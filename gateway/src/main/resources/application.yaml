@@ -143,6 +143,7 @@ gateway:
     - /users/auth/login
     - /users/auth/refresh
     - /users/auth/firebase-login
+    - /users/auth/exchangeFirebaseToken
     - /users/auth/firebase-register
     - /users/auth/firebase-refresh
     - /users/auth/totp/verify
