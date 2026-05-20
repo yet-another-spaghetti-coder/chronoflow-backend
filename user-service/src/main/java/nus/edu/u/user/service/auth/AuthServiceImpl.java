@@ -69,10 +69,10 @@ public class AuthServiceImpl implements AuthService {
     @Resource
     private RoleService roleService;
 
-    @Value("${MOBILE_SSO_JWKS}")
+    @Value("${MOBILE_SSO_JWKS:}")
     private String mobileSsoJWKS;
 
-    @Value("${MOBILE_CLIENT_ID}")
+    @Value("${MOBILE_CLIENT_ID:}")
     private String mobileClientId;
 
     private final SecureRandom secureRandom = new SecureRandom();
@@ -145,6 +145,10 @@ public class AuthServiceImpl implements AuthService {
     }
 
     public JWTClaimsSet verifyJwtSignature(String token) throws Exception {
+        if (StrUtil.isBlank(mobileSsoJWKS) || StrUtil.isBlank(mobileClientId)) {
+            throw new IllegalStateException(
+                    "Mobile SSO is not configured. Set MOBILE_SSO_JWKS and MOBILE_CLIENT_ID.");
+        }
         token = token.trim();
         if (token.length() >= 2 && token.startsWith("\"") && token.endsWith("\"")) {
             token = token.substring(1, token.length() - 1);

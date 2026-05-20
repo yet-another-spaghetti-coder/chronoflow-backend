@@ -73,7 +73,7 @@
         <gatling.version>3.14.9</gatling.version>
         <logback.version>1.5.27</logback.version>
         <bouncycastle.version>1.78.1</bouncycastle.version>
-        <netty.shaded.version>1.79.0</netty.shaded.version>
+        <grpc.version>1.79.0</grpc.version>
 
         <!-- SonarQube 測試覆蓋排除項（所有自動生成的類不統計、不掃描） -->
         <sonar.coverage.exclusions>
@@ -108,8 +108,10 @@
 
             <dependency>
                 <groupId>io.grpc</groupId>
-                <artifactId>grpc-netty-shaded</artifactId>
-                <version>${netty.shaded.version}</version>
+                <artifactId>grpc-bom</artifactId>
+                <version>${grpc.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
 
             <dependency>

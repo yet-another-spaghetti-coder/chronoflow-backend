@@ -82,6 +82,11 @@ spring:
             - Path=/notifications/**
           filters:
             - RewritePath=/notifications/v3/api-docs, /v3/api-docs
+        # WebSocket Gateway
+        - id: ws
+          uri: lb:ws://ws-gateway
+          predicates:
+            - Path=/ws/**
       x-forwarded:
         prefix-enabled: false
 
