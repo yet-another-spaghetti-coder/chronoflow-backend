@@ -18,9 +18,10 @@ import lombok.NoArgsConstructor;
 public class NewTaskAssignmentDTO {
     private String taskId;
     private String eventId;
-    private String assigneeUserId;
-    private String assigneeEmail;
     private String assignerName;
+    private String assigneeUserId;
+    private String assignerUserId;
+    private String assigneeEmail;
     private String taskName;
     private String eventName;
     private String description;

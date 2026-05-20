@@ -40,7 +40,7 @@ public class NotificationPublisher {
             put(attrs, "userId", req.getUserId());
             put(attrs, "to", req.getTo());
 
-            String messageId = String.valueOf(pubSubTemplate.publish(TOPIC_NAME, payload, attrs));
+            String messageId = pubSubTemplate.publish(TOPIC_NAME, payload, attrs).get();
             log.info(
                     "📤 Published Notification to topic={} msgId={} eventId={} channel={} type={}",
                     TOPIC_NAME,

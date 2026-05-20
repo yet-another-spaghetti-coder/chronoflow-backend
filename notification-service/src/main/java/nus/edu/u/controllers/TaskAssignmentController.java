@@ -2,6 +2,7 @@ package nus.edu.u.controllers;
 
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.domain.dto.common.NewTaskAssignmentDTO;
 import nus.edu.u.services.domains.task.TaskAssignmentService;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/task")
+@Slf4j
 public class TaskAssignmentController {
 
     private final TaskAssignmentService taskAssignmentService;
@@ -30,6 +32,13 @@ public class TaskAssignmentController {
     @PostMapping("/assign/notify")
     public String notifyAssignment(@RequestBody NewTaskAssignmentDTO dto) {
         Map<String, String> result = taskAssignmentService.notifyNewTaskAllChannels(dto);
+
+        log.info(
+                "Task assignment notify request for taskId={} assigneeUserId={} email={} result={}",
+                dto.getTaskId(),
+                dto.getAssigneeUserId(),
+                dto.getAssigneeEmail(),
+                result);
 
         return "Successfully assigned task '" + dto.getTaskName() + "'";
     }

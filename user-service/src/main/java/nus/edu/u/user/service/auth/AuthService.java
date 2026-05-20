@@ -1,4 +1,5 @@
 package nus.edu.u.user.service.auth;
+
 import com.nimbusds.jwt.JWTClaimsSet;
 import nus.edu.u.user.domain.dataobject.user.UserDO;
 import nus.edu.u.user.domain.vo.auth.LoginReqVO;
@@ -28,6 +29,7 @@ public interface AuthService {
     UserDO mobileSsoLogin(String jwtToken) throws Exception;
 
     LoginRespVO validateOTT(String ott) throws Exception;
+
     /**
      * Login service
      *

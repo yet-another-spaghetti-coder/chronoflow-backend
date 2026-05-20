@@ -7,22 +7,24 @@ import nus.edu.u.shared.rpc.notification.dto.common.NotificationRequestDTO;
 import nus.edu.u.shared.rpc.notification.dto.task.NewTaskAssignmentDTO;
 import nus.edu.u.shared.rpc.notification.enums.NotificationChannel;
 import nus.edu.u.shared.rpc.notification.enums.NotificationEventType;
+import nus.edu.u.shared.rpc.notification.enums.NotificationObjectType;
 
 public class TaskNotificationMapper {
 
     /** Build the same idempotent eventId for every channel. */
     private static String idempotentEventId(NewTaskAssignmentDTO req) {
-        // Must match the consumer’s buildEventId logic
-        return String.join(
-                "|",
-                NotificationEventType.NEW_TASK_ASSIGN.name(),
-                String.valueOf(req.getTaskId()),
-                String.valueOf(req.getEventId()),
-                String.valueOf(req.getAssigneeUserId()));
+        return NotificationEventType.buildEventId(
+                NotificationEventType.NEW_TASK_ASSIGN,
+                "task",
+                req.getTaskId(),
+                "event",
+                req.getEventId(),
+                "assignee",
+                req.getAssigneeUserId());
     }
 
     /** EMAIL */
-    public static NotificationRequestDTO taskAssignmentToEmailNotification(
+    public static NotificationRequestDTO newTaskAssignmentToEmailNotification(
             NewTaskAssignmentDTO req) {
         Map<String, Object> vars =
                 Map.of(
@@ -50,30 +52,25 @@ public class TaskNotificationMapper {
     }
 
     /** PUSH */
-    public static NotificationRequestDTO taskAssignmentToPushNotification(
+    public static NotificationRequestDTO newTaskAssignmentToPushNotification(
             NewTaskAssignmentDTO req) {
-        Map<String, Object> vars =
-                Map.of(
-                        "taskId", req.getTaskId(),
-                        "eventId", req.getEventId(),
-                        "assigneeUserId", req.getAssigneeUserId(),
-                        "assignerName", req.getAssignerName(),
-                        "taskName", req.getTaskName(),
-                        "eventName", req.getEventName(),
-                        "description", req.getDescription());
 
         return NotificationRequestDTO.builder()
                 .channel(NotificationChannel.PUSH)
-                .userId(req.getAssigneeUserId()) // devices resolved by userId on consumer side
-                .templateId("new-task-assigned")
-                .variables(vars)
-                .locale(Locale.ENGLISH)
-                .eventId(idempotentEventId(req)) // same idempotent ID as email
                 .type(NotificationEventType.NEW_TASK_ASSIGN)
+                .eventId(idempotentEventId(req))
+                .recipientUserId(req.getAssigneeUserId())
+                .userId(req.getAssigneeUserId()) // temporary
+                .actorId(req.getAssignerUserId())
+                .objectType(NotificationObjectType.TASK)
+                .objectId(String.valueOf(req.getTaskId()))
+                .title("Notification")
+                .previewText("A new task has been assigned to you")
                 .build();
     }
 
-    public static NotificationRequestDTO taskAssignmentToWsNotification(NewTaskAssignmentDTO req) {
+    public static NotificationRequestDTO newTaskAssignmentToWsNotification(
+            NewTaskAssignmentDTO req) {
         Map<String, Object> vars =
                 Map.of(
                         "taskId", req.getTaskId(),

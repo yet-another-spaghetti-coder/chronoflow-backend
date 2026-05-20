@@ -1,8 +1,6 @@
 package nus.edu.u.attendee.mapper.notification;
 
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import nus.edu.u.shared.rpc.notification.dto.Attendee.AttendeeInviteReqDTO;
 import nus.edu.u.shared.rpc.notification.dto.common.AttachmentDTO;
 import nus.edu.u.shared.rpc.notification.dto.common.NotificationRequestDTO;
@@ -11,18 +9,29 @@ import nus.edu.u.shared.rpc.notification.enums.NotificationEventType;
 
 public class AttendeeNotificationMapper {
 
+    private static String nz(String s) {
+        return s == null ? "" : s;
+    }
+
     public static NotificationRequestDTO attendeeInvitationToNotification(
             AttendeeInviteReqDTO req) {
 
-        Map<String, Object> vars =
-                Map.of(
-                        "attendeeName", req.getAttendeeName(),
-                        "attendeeMobile", req.getAttendeeMobile(),
-                        "organizationName", req.getOrganizationName(),
-                        "eventName", req.getEventName(),
-                        "eventDate", req.getEventDate(),
-                        "eventLocation", req.getEventLocation(),
-                        "eventDescription", req.getEventDescription());
+        // These should NOT be null; fail fast with clear message
+        String toEmail = Objects.requireNonNull(req.getToEmail(), "toEmail is null");
+        Object eventIdObj = Objects.requireNonNull(req.getEventId(), "eventId is null");
+
+        Map<String, Object> vars = new HashMap<>();
+        vars.put("attendeeName", nz(req.getAttendeeName()));
+        vars.put("attendeeMobile", nz(req.getAttendeeMobile()));
+        vars.put("organizationName", nz(req.getOrganizationName()));
+        vars.put("eventName", nz(req.getEventName()));
+        vars.put(
+                "eventDate",
+                req.getEventDate() == null
+                        ? ""
+                        : req.getEventDate()); // keep as-is if it's not String
+        vars.put("eventLocation", nz(req.getEventLocation()));
+        vars.put("eventDescription", nz(req.getEventDescription()));
 
         List<AttachmentDTO> attachments =
                 (req.getQrCodeBytes() != null)
@@ -30,9 +39,9 @@ public class AttendeeNotificationMapper {
                                 AttachmentDTO.builder()
                                         .filename("qrcode.png")
                                         .contentType(
-                                                req.getQrCodeContentType() != null
-                                                        ? req.getQrCodeContentType()
-                                                        : "image/png")
+                                                nz(req.getQrCodeContentType()).isEmpty()
+                                                        ? "image/png"
+                                                        : req.getQrCodeContentType())
                                         .bytes(req.getQrCodeBytes())
                                         .inline(true)
                                         .contentId("qr-code")
@@ -41,13 +50,13 @@ public class AttendeeNotificationMapper {
 
         return NotificationRequestDTO.builder()
                 .channel(NotificationChannel.EMAIL)
-                .to(req.getToEmail())
-                .recipientKey("email:" + req.getToEmail())
+                .to(toEmail)
+                .recipientKey("email:" + toEmail)
                 .templateId("attendee-qr-invite")
                 .variables(vars)
                 .locale(Locale.ENGLISH)
                 .attachments(attachments)
-                .eventId("attendee-invite-" + req.getEventId() + "-" + req.getToEmail())
+                .eventId("attendee-invite-" + eventIdObj + "-" + toEmail)
                 .type(NotificationEventType.ATTENDEE_INVITE)
                 .build();
     }

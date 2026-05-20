@@ -1,6 +1,7 @@
 package nus.edu.u.attendee.service;
 
 import java.util.List;
+import nus.edu.u.attendee.domain.vo.attendee.AttendeeDashboardRespVO;
 import nus.edu.u.attendee.domain.vo.attendee.AttendeeInfoRespVO;
 import nus.edu.u.attendee.domain.vo.attendee.AttendeeQrCodeRespVO;
 import nus.edu.u.attendee.domain.vo.attendee.AttendeeReqVO;
@@ -65,4 +66,6 @@ public interface AttendeeService {
     AttendeeQrCodeRespVO update(Long attendeeId, AttendeeReqVO reqVO);
 
     AttendeeInfoRespVO getAttendeeInfo(String token);
+
+    AttendeeDashboardRespVO getDashboard(Long eventId, Integer page, Integer pageSize);
 }

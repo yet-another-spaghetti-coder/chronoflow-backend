@@ -1,6 +1,5 @@
 package nus.edu.u.user.controller.auth;
 
-import static nus.edu.u.common.constant.SecurityConstants.REFRESH_TOKEN_COOKIE_NAME;
 import static nus.edu.u.common.constant.SecurityConstants.REFRESH_TOKEN_REMEMBER_COOKIE_MAX_AGE;
 import static nus.edu.u.common.core.domain.CommonResult.success;
 
@@ -22,9 +21,7 @@ import nus.edu.u.user.service.auth.AuthService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * TOTP (Two-Factor Authentication) Controller
- */
+/** TOTP (Two-Factor Authentication) Controller */
 @Tag(name = "TOTP Controller")
 @RestController
 @RequestMapping("/users/auth/totp")
@@ -32,11 +29,9 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class TotpController {
 
-    @Resource
-    private AuthService authService;
+    @Resource private AuthService authService;
 
-    @Resource
-    private CookieConfig cookieConfig;
+    @Resource private CookieConfig cookieConfig;
 
     @GetMapping("/status")
     @Operation(summary = "Check if TOTP is enabled for current user")
@@ -66,16 +61,17 @@ public class TotpController {
     @PostMapping("/verify")
     @Operation(summary = "Verify TOTP code during login (MFA)")
     public CommonResult<LoginRespVO> verifyTotp(
-            @RequestBody @Valid TotpVerifyReqVO reqVO,
-            HttpServletResponse response) {
-        LoginRespVO loginRespVO = authService.verifyTotpAndLogin(reqVO.getMfaToken(), reqVO.getCode());
+            @RequestBody @Valid TotpVerifyReqVO reqVO, HttpServletResponse response) {
+        LoginRespVO loginRespVO =
+                authService.verifyTotpAndLogin(reqVO.getMfaToken(), reqVO.getCode());
 
         // Set refresh token cookie
         if (loginRespVO.getRefreshToken() != null) {
-            AbstractCookieFactory cookieFactory = new LongLifeRefreshTokenCookie(
-                    cookieConfig.isHttpOnly(),
-                    cookieConfig.isSecurity(),
-                    REFRESH_TOKEN_REMEMBER_COOKIE_MAX_AGE);
+            AbstractCookieFactory cookieFactory =
+                    new LongLifeRefreshTokenCookie(
+                            cookieConfig.isHttpOnly(),
+                            cookieConfig.isSecurity(),
+                            REFRESH_TOKEN_REMEMBER_COOKIE_MAX_AGE);
             response.addCookie(cookieFactory.createCookie(loginRespVO.getRefreshToken()));
         }
 

@@ -4,7 +4,7 @@ metadata:
   name: task-service-pdb
   namespace: chronoflow
 spec:
-  minAvailable: 1
+  minAvailable: 0
   selector:
     matchLabels:
       app: task-service

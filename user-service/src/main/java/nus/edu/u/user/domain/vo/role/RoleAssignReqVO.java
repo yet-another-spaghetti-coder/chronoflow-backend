@@ -1,8 +1,7 @@
 package nus.edu.u.user.domain.vo.role;
 
-import java.util.List;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.List;
 import lombok.Data;
 
 /**

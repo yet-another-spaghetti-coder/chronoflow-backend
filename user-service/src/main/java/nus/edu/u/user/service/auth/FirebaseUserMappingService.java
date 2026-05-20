@@ -10,8 +10,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 /**
- * Service for bidirectional mapping between Firebase UID and internal user ID.
- * Uses Redis caching with database fallback.
+ * Service for bidirectional mapping between Firebase UID and internal user ID. Uses Redis caching
+ * with database fallback.
  */
 @Service
 @RequiredArgsConstructor
@@ -43,8 +43,9 @@ public class FirebaseUserMappingService {
         }
 
         // Query database - bypass tenant filter since user is not authenticated yet
-        UserDO user = MybatisPlusConfig.executeWithoutTenantFilter(
-                () -> userService.getUserByFirebaseUid(firebaseUid));
+        UserDO user =
+                MybatisPlusConfig.executeWithoutTenantFilter(
+                        () -> userService.getUserByFirebaseUid(firebaseUid));
         if (user != null) {
             // Cache the mapping
             createMapping(firebaseUid, user.getId());

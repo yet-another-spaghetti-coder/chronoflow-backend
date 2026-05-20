@@ -27,7 +27,8 @@ public interface ErrorCodeConstants {
     ErrorCode FIREBASE_VERIFICATION_FAILED =
             new ErrorCode(10_01_008, "Firebase token verification failed");
     ErrorCode REFRESH_TOKEN_REUSE_DETECTED =
-            new ErrorCode(10_01_009, "Security alert: Refresh token reuse detected. Please log in again");
+            new ErrorCode(
+                    10_01_009, "Security alert: Refresh token reuse detected. Please log in again");
 
     // ========= user crud module 12-01-000 ============
     ErrorCode USERNAME_EXIST = new ErrorCode(12_01_001, "Username already exists");
@@ -160,6 +161,7 @@ public interface ErrorCodeConstants {
     // ========= Attendee module 10-05-000 ============
     ErrorCode ATTENDEE_NOT_EXIST = new ErrorCode(10_05_001, "Attendee does not exist");
     ErrorCode UPDATE_ATTENDEE_FAILED = new ErrorCode(10_05_002, "Update attendee failed");
+    ErrorCode TENANT_NOT_EXIST = new ErrorCode(10_05_003, "Tenant does not exist");
 
     // ========= Excel ============
     ErrorCode EMPTY_EXCEL = new ErrorCode(905, "Excel is empty");

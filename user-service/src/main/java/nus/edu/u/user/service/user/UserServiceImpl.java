@@ -19,18 +19,20 @@ import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.constant.SecurityConstants;
 import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.common.exception.ServiceException;
+import nus.edu.u.framework.security.audit.AuditType;
+import nus.edu.u.framework.security.audit.Auditable;
 import nus.edu.u.shared.rpc.notification.dto.member.RegSearchReqDTO;
-import nus.edu.u.user.domain.dataobject.tenant.TenantDO;
 import nus.edu.u.user.domain.dataobject.role.RoleDO;
+import nus.edu.u.user.domain.dataobject.tenant.TenantDO;
 import nus.edu.u.user.domain.dataobject.user.UserDO;
 import nus.edu.u.user.domain.dataobject.user.UserOttDO;
 import nus.edu.u.user.domain.dataobject.user.UserRoleDO;
 import nus.edu.u.user.domain.dto.*;
-import nus.edu.u.user.mapper.tenant.TenantMapper;
 import nus.edu.u.user.domain.vo.user.BulkUpsertUsersRespVO;
 import nus.edu.u.user.domain.vo.user.UserProfileRespVO;
 import nus.edu.u.user.enums.user.UserStatusEnum;
 import nus.edu.u.user.mapper.role.RoleMapper;
+import nus.edu.u.user.mapper.tenant.TenantMapper;
 import nus.edu.u.user.mapper.user.UserMapper;
 import nus.edu.u.user.mapper.user.UserOttMapper;
 import nus.edu.u.user.mapper.user.UserRoleMapper;
@@ -78,33 +80,41 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean isPasswordMatch(String rawPassword, String encodedPassword) {
-        return passwordEncoder.matches(rawPassword, encodedPassword);
+    public boolean isPasswordMatch(String rawPassword, String encodedPassword, String salt) {
+        return passwordEncoder.matches(rawPassword + salt, encodedPassword);
     }
 
     @Override
-    public void generateToken(String token, long userId){
-        UserOttDO userOttDO = UserOttDO.builder().id(UUID.randomUUID().toString()).userId(userId).token(token).createdAt(LocalDateTime.now()).expiresAt(LocalDateTime.now().plusSeconds(SecurityConstants.ONE_TIME_TOKEN_EXPIRY_SECS)).build();
+    public void generateToken(String token, long userId) {
+        UserOttDO userOttDO =
+                UserOttDO.builder()
+                        .id(UUID.randomUUID().toString())
+                        .userId(userId)
+                        .token(token)
+                        .createdAt(LocalDateTime.now())
+                        .expiresAt(
+                                LocalDateTime.now()
+                                        .plusSeconds(SecurityConstants.ONE_TIME_TOKEN_EXPIRY_SECS))
+                        .build();
         userOttMapper.insert(userOttDO);
     }
 
     @Override
     public UserDO retrieveUserFromOTT(String ott) throws Exception {
-        int rows = userOttMapper.update(null,
-                new UpdateWrapper<UserOttDO>()
-                        .eq("token", ott)
-                        .isNull("used_at")
-                        .gt("expires_at", LocalDateTime.now())
-                        .set("used_at", LocalDateTime.now())
-        );
+        int rows =
+                userOttMapper.update(
+                        null,
+                        new UpdateWrapper<UserOttDO>()
+                                .eq("token", ott)
+                                .isNull("used_at")
+                                .gt("expires_at", LocalDateTime.now())
+                                .set("used_at", LocalDateTime.now()));
         if (rows == 0) {
             throw new Exception("Invalid or expired token");
         }
 
-        UserOttDO userOttDo = userOttMapper.selectOne(
-                new QueryWrapper<UserOttDO>()
-                        .eq("token", ott)
-        );
+        UserOttDO userOttDo =
+                userOttMapper.selectOne(new QueryWrapper<UserOttDO>().eq("token", ott));
         return userMapper.selectUserById(userOttDo.getUserId());
     }
 
@@ -125,6 +135,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @Auditable(
+            operation = "Create User",
+            type = AuditType.ADMIN_ACTION,
+            targetType = "User",
+            excludeFields = {"password"})
     public Long createUserWithRoleIds(CreateUserDTO dto) {
         String email = dto.getEmail().trim();
         // Filter out roleId=1 (admin) and remove duplicates
@@ -175,13 +190,27 @@ public class UserServiceImpl implements UserService {
                         .recipientEmail(user.getEmail())
                         .build();
 
-        memberNotificationPublisher.sendMemberInviteEmail(req);
+        try {
+            memberNotificationPublisher.sendMemberInviteEmail(req);
+        } catch (Exception e) {
+            log.warn(
+                    "Send member invite notification failed. userId={} email={}",
+                    user.getId(),
+                    user.getEmail(),
+                    e);
+        }
 
         return user.getId();
     }
 
     @Override
     @Transactional
+    @Auditable(
+            operation = "Update User",
+            type = AuditType.ADMIN_ACTION,
+            targetType = "User",
+            targetId = "#dto.id",
+            excludeFields = {"password"})
     public UserDO updateUserWithRoleIds(UpdateUserDTO dto) {
         UserDO dbUser = userMapper.selectById(dto.getId());
         if (dbUser == null || Boolean.TRUE.equals(dbUser.getDeleted())) {
@@ -221,6 +250,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @Auditable(
+            operation = "Soft Delete User",
+            type = AuditType.ADMIN_ACTION,
+            targetType = "User",
+            targetId = "#id")
     public void softDeleteUser(Long id) {
         UserDO db = userMapper.selectRawById(id);
         if (db == null) {
@@ -242,6 +276,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @Auditable(
+            operation = "Restore User",
+            type = AuditType.ADMIN_ACTION,
+            targetType = "User",
+            targetId = "#id")
     public void restoreUser(Long id) {
         // 1) Check if the user exists and has been deleted
         UserDO db = userMapper.selectRawById(id);
@@ -267,6 +306,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @Auditable(
+            operation = "Disable User",
+            type = AuditType.ADMIN_ACTION,
+            targetType = "User",
+            targetId = "#id")
     public void disableUser(Long id) {
         UserDO db = userMapper.selectById(id);
         if (db == null || Boolean.TRUE.equals(db.getDeleted())) {
@@ -290,6 +334,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @Auditable(
+            operation = "Enable User",
+            type = AuditType.ADMIN_ACTION,
+            targetType = "User",
+            targetId = "#id")
     public void enableUser(Long id) {
         UserDO db = userMapper.selectById(id);
         if (db == null || Boolean.TRUE.equals(db.getDeleted())) {
@@ -607,7 +656,10 @@ public class UserServiceImpl implements UserService {
         // Create tenant first (required for multi-tenant system)
         TenantDO tenant =
                 TenantDO.builder()
-                        .name(organizationName != null ? organizationName : name + "'s Organization")
+                        .name(
+                                organizationName != null
+                                        ? organizationName
+                                        : name + "'s Organization")
                         .contactName(name)
                         .build();
         if (tenantMapper.insert(tenant) <= 0) {
@@ -633,12 +685,13 @@ public class UserServiceImpl implements UserService {
         tenantMapper.updateById(tenant);
 
         // Create ORGANIZER role in the new tenant
-        RoleDO role = RoleDO.builder()
-                .name("Organizer")
-                .roleKey("ORGANIZER")
-                .permissionList(List.of(1971465366969307138L)) // All permission
-                .status(CommonStatusEnum.ENABLE.getStatus())
-                .build();
+        RoleDO role =
+                RoleDO.builder()
+                        .name("Organizer")
+                        .roleKey("ORGANIZER")
+                        .permissionList(List.of(1971465366969307138L)) // All permission
+                        .status(CommonStatusEnum.ENABLE.getStatus())
+                        .build();
         role.setTenantId(tenant.getId());
         if (roleMapper.insert(role) <= 0) {
             throw exception(USER_INSERT_FAILURE);
@@ -661,8 +714,8 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * Generate a unique username based on display name and email.
-     * If display name is taken, try email prefix, then append random suffix.
+     * Generate a unique username based on display name and email. If display name is taken, try
+     * email prefix, then append random suffix.
      */
     private String generateUniqueUsername(String displayName, String email) {
         // Try display name first
@@ -679,7 +732,8 @@ public class UserServiceImpl implements UserService {
         }
 
         // Append random suffix to make it unique
-        String baseUsername = displayName != null && !displayName.isBlank() ? displayName : emailPrefix;
+        String baseUsername =
+                displayName != null && !displayName.isBlank() ? displayName : emailPrefix;
         String uniqueUsername;
         int attempts = 0;
         do {
@@ -693,20 +747,22 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void enableTotp(Long userId, String totpSecret) {
-        LambdaUpdateWrapper<UserDO> wrapper = Wrappers.lambdaUpdate(UserDO.class)
-                .eq(UserDO::getId, userId)
-                .set(UserDO::getTotpSecret, totpSecret)
-                .set(UserDO::getTotpEnabled, true);
+        LambdaUpdateWrapper<UserDO> wrapper =
+                Wrappers.lambdaUpdate(UserDO.class)
+                        .eq(UserDO::getId, userId)
+                        .set(UserDO::getTotpSecret, totpSecret)
+                        .set(UserDO::getTotpEnabled, true);
         userMapper.update(null, wrapper);
         log.info("TOTP enabled for userId={}", userId);
     }
 
     @Override
     public void disableTotp(Long userId) {
-        LambdaUpdateWrapper<UserDO> wrapper = Wrappers.lambdaUpdate(UserDO.class)
-                .eq(UserDO::getId, userId)
-                .set(UserDO::getTotpSecret, null)
-                .set(UserDO::getTotpEnabled, false);
+        LambdaUpdateWrapper<UserDO> wrapper =
+                Wrappers.lambdaUpdate(UserDO.class)
+                        .eq(UserDO::getId, userId)
+                        .set(UserDO::getTotpSecret, null)
+                        .set(UserDO::getTotpEnabled, false);
         userMapper.update(null, wrapper);
         log.info("TOTP disabled for userId={}", userId);
     }

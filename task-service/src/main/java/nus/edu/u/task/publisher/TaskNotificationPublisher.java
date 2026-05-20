@@ -15,18 +15,18 @@ public class TaskNotificationPublisher implements TaskAssignmentService {
     @Override
     public String notifyNewTaskToAssigneePush(NewTaskAssignmentDTO dto) {
         return notificationPublisher.publish(
-                TaskNotificationMapper.taskAssignmentToPushNotification(dto));
+                TaskNotificationMapper.newTaskAssignmentToPushNotification(dto));
     }
 
     @Override
     public String notifyNewTaskToAssigneeEmail(NewTaskAssignmentDTO dto) {
         return notificationPublisher.publish(
-                TaskNotificationMapper.taskAssignmentToEmailNotification(dto));
+                TaskNotificationMapper.newTaskAssignmentToEmailNotification(dto));
     }
 
     @Override
     public String notifyNewTaskToAssigneeWs(NewTaskAssignmentDTO dto) {
         return notificationPublisher.publish(
-                TaskNotificationMapper.taskAssignmentToWsNotification(dto));
+                TaskNotificationMapper.newTaskAssignmentToWsNotification(dto));
     }
 }

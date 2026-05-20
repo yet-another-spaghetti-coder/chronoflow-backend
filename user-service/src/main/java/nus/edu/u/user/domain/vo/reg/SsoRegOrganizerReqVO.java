@@ -1,6 +1,5 @@
 package nus.edu.u.user.domain.vo.reg;
 
-
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -8,12 +7,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import nus.edu.u.common.annotation.Mobile;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class SsoRegOrganizerReqVO {
-
 
     @NotEmpty(message = "Jwt token is required")
     private String jwtToken;

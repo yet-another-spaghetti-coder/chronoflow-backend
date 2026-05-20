@@ -16,6 +16,8 @@ public class DeviceRegisterDTO {
     /** FCM registration token (required) */
     private String token;
 
+    private String deviceId;
+
     /** Platform type (optional — defaults to WEB) */
     @Builder.Default private PushPlatform platform = PushPlatform.WEB;
 

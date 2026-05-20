@@ -9,8 +9,8 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 /**
- * Global filter to add security headers to all responses.
- * Implements OWASP recommended security headers.
+ * Global filter to add security headers to all responses. Implements OWASP recommended security
+ * headers.
  */
 @Component
 public class SecurityHeadersFilter implements GlobalFilter, Ordered {
@@ -50,10 +50,7 @@ public class SecurityHeadersFilter implements GlobalFilter, Ordered {
         return chain.filter(exchange);
     }
 
-    /**
-     * Build Content Security Policy header.
-     * Allows Firebase and Google auth domains.
-     */
+    /** Build Content Security Policy header. Allows Firebase and Google auth domains. */
     private String buildCsp() {
         return String.join(
                 "; ",

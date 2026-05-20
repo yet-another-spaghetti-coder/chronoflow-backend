@@ -21,6 +21,12 @@
             <artifactId>spring-cloud-starter-gateway</artifactId>
         </dependency>
 
+        <!-- Enable Actuator (required for Micrometer/OTel tracing auto-config) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>com.github.xiaoymin</groupId>
             <artifactId>knife4j-gateway-spring-boot-starter</artifactId>
@@ -73,6 +79,16 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Micrometer / OpenTelemetry tracing so traceId/spanId populate in logs -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-otel</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-exporter-otlp</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -102,17 +118,53 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <configuration>
-                    <includes>
-                        <include>nus/edu/u/gateway/util/WebFrameworkUtils*</include>
-                        <include>nus/edu/u/gateway/handler/GlobalExceptionHandler*</include>
-                    </includes>
-                    <excludes>
-                        <exclude>**/generated/**</exclude>
-                        <exclude>**/*Generated*</exclude>
-                        <exclude>**/*MapperImpl.class</exclude>
-                    </excludes>
-                </configuration>
+                <executions>
+                    <!-- sets up the JaCoCo agent before tests run -->
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <!-- generates the report after tests run -->
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                    <!-- optional: fail build if coverage drops below threshold -->
+                    <execution>
+                        <id>check</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.10</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                            <includes>
+                                <include>nus/edu/u/gateway/util/WebFrameworkUtils*</include>
+                                <include>nus/edu/u/gateway/handler/GlobalExceptionHandler*</include>
+                            </includes>
+                            <excludes>
+                                <exclude>**/generated/**</exclude>
+                                <exclude>**/*Generated*</exclude>
+                                <exclude>**/*MapperImpl.class</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

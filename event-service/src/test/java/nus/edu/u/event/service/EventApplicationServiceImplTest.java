@@ -6,7 +6,6 @@ import static nus.edu.u.common.enums.ErrorCodeConstants.EVENT_NOT_FOUND;
 import static nus.edu.u.common.enums.ErrorCodeConstants.EVENT_RESTORE_FAILED;
 import static nus.edu.u.common.enums.ErrorCodeConstants.TASK_DELETE_FAILED;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
@@ -16,7 +15,6 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 

@@ -1,6 +1,11 @@
 server:
   port: 8080
 
+# Include OpenTelemetry trace/span IDs in log lines when present
+logging:
+  pattern:
+    console: "%d{dd-MM-yyyy HH:mm:ss.SSS} [traceId=%X{traceId:-} spanId=%X{spanId:-}] [%thread] %-5level %logger{36} - %msg%n"
+
 spring:
   application:
     name: gateway
@@ -14,6 +19,7 @@ spring:
   # Redis config
   data:
     redis:
+      database: 0
       repositories:
         enabled: false
       lettuce:
@@ -26,6 +32,10 @@ spring:
           max-idle: 10
           # Minimum number of idle connections in the connection pool
           min-idle: 0
+
+  reactor:
+    # Ensure observability/tracing context (including MDC) flows through reactive operators
+    context-propagation: auto
 
   cloud:
     nacos:
@@ -82,11 +92,21 @@ spring:
             - Path=/notifications/**
           filters:
             - RewritePath=/notifications/v3/api-docs, /v3/api-docs
-        # WebSocket Gateway
-        - id: ws
+        # websocket gateway
+        - id: ws-upgrade
           uri: lb:ws://ws-gateway
           predicates:
+            - Path=/ws
+            - Header=Upgrade, websocket
+          order: -10
+
+        # 2) REST under /ws/**
+        - id: ws-api
+          uri: lb://ws-gateway
+          predicates:
             - Path=/ws/**
+          order: 0
+
       x-forwarded:
         prefix-enabled: false
 
@@ -116,11 +136,14 @@ knife4j:
 
 gateway:
   white-list:
+    - /actuator/health/**
+    - /actuator/prometheus
     - /users/auth/exchangeToken
     - /users/auth/validateOTT
     - /users/auth/login
     - /users/auth/refresh
     - /users/auth/firebase-login
+    - /users/auth/exchangeFirebaseToken
     - /users/auth/firebase-register
     - /users/auth/firebase-refresh
     - /users/auth/totp/verify
@@ -133,6 +156,7 @@ gateway:
     - /v3/**
     - /*/v3/**
     - /actuator/health
+    - /internal/diagnostics/**
 
 ############## Sa-Token config (文档: https://sa-token.cc) ##############
 sa-token:
@@ -156,6 +180,8 @@ sa-token:
   is-log: true
   # Token style
   token-style: uuid
+  cookie:
+    http-only: true
 
 # Heath check
 management:
@@ -176,9 +202,13 @@ management:
             - "*"
           exclude:
             - ${management.endpoint.health.group.readiness.include}
-    Prometheus:
-      access: unrestricted
-  Prometheus:
-    metrics:
-      export:
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
         enabled: true
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0

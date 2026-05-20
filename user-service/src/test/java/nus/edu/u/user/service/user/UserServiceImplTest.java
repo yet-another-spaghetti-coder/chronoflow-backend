@@ -102,9 +102,9 @@ class UserServiceImplTest {
 
     @Test
     void isPasswordMatch_usesPasswordEncoder() {
-        when(passwordEncoder.matches("raw", "encoded")).thenReturn(true);
+        when(passwordEncoder.matches("raw" + "salt", "encoded")).thenReturn(true);
 
-        assertThat(service.isPasswordMatch("raw", "encoded")).isTrue();
+        assertThat(service.isPasswordMatch("raw", "encoded", "salt")).isTrue();
     }
 
     @Test

@@ -18,6 +18,7 @@ spring:
     redis:
       repositories:
         enabled: false
+      username: ${REDIS_USERNAME:default}
       lettuce:
         pool:
           # Maximum number of connections in the connection pool
@@ -125,7 +126,8 @@ dubbo:
     address: nacos://${NACOS_HOST}:${NACOS_PORT}?username=${NACOS_USERNAME}&password=${NACOS_PASSWORD}
     # This will enable application-level service discovery only (the recommended service discovery method for Dubbo3).
     # For users upgrading from Dubbo2.x, please set the value to 'all' for smooth migration.
-    register-mode: instance
+    register-mode: all
+    use-as-metadata-center: false
     parameters:
       namespace: ${spring.profiles.active}
   protocol:

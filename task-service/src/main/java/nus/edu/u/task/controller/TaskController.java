@@ -78,6 +78,7 @@ public class TaskController {
     @PostMapping("{eventId}")
     public CommonResult<TaskRespVO> create(
             @PathVariable("eventId") Long eventId, @Valid @ModelAttribute TaskCreateReqVO request) {
+        log.info("Creating task for eventId={} with title={}", eventId, request.getName());
         TaskRespVO resp = taskApplicationService.createTask(eventId, request);
         return CommonResult.success(resp);
     }
@@ -85,12 +86,14 @@ public class TaskController {
     @GetMapping("{eventId}/{taskId}")
     public CommonResult<TaskRespVO> getTask(
             @PathVariable("eventId") Long eventId, @PathVariable("taskId") Long taskId) {
+        log.info("Fetching task taskId={} for eventId={}", taskId, eventId);
         TaskRespVO resp = taskApplicationService.getTask(eventId, taskId);
         return CommonResult.success(resp);
     }
 
     @GetMapping("/{eventId}")
     public CommonResult<List<TaskRespVO>> listByEvent(@PathVariable("eventId") Long eventId) {
+        log.info("Listing tasks for eventId={}", eventId);
         List<TaskRespVO> resp = taskApplicationService.listTasksByEvent(eventId);
         return CommonResult.success(resp);
     }
@@ -98,6 +101,7 @@ public class TaskController {
     @GetMapping("/dashboard")
     public CommonResult<TaskDashboardRespVO> dashboard() {
         Long memberId = StpUtil.getLoginIdAsLong();
+        log.info("Fetching task dashboard for memberId={}", memberId);
         TaskDashboardRespVO resp = taskApplicationService.getByMemberId(memberId);
         return CommonResult.success(resp);
     }
@@ -107,6 +111,11 @@ public class TaskController {
             @PathVariable("eventId") Long eventId,
             @PathVariable("taskId") Long taskId,
             @Valid @ModelAttribute TaskUpdateReqVO request) {
+        log.info(
+                "Updating task taskId={} for eventId={} with type={}",
+                taskId,
+                eventId,
+                request.getType());
         TaskRespVO resp =
                 taskApplicationService.updateTask(eventId, taskId, request, request.getType());
         return CommonResult.success(resp);
@@ -116,6 +125,7 @@ public class TaskController {
     @DeleteMapping("/{eventId}/{taskId}")
     public CommonResult<Boolean> delete(
             @PathVariable("eventId") Long eventId, @PathVariable("taskId") Long taskId) {
+        log.info("Deleting task taskId={} for eventId={}", taskId, eventId);
         taskApplicationService.deleteTask(eventId, taskId);
         return CommonResult.success(Boolean.TRUE);
     }
@@ -124,6 +134,7 @@ public class TaskController {
     @GetMapping("/{eventId}/log/{taskId}")
     public CommonResult<List<TaskLogRespVO>> logs(
             @PathVariable("eventId") Long eventId, @PathVariable("taskId") Long taskId) {
+        log.info("Fetching task logs for taskId={} eventId={}", taskId, eventId);
         List<TaskLogRespVO> resp = taskLogApplicationService.getTaskLog(taskId);
         return CommonResult.success(resp);
     }

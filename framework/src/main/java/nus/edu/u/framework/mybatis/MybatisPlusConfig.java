@@ -24,14 +24,14 @@ import org.springframework.context.annotation.Bean;
 public class MybatisPlusConfig {
 
     /**
-     * Thread-local flag to bypass tenant filtering for specific operations
-     * like Firebase login where we need to look up a user before authentication.
+     * Thread-local flag to bypass tenant filtering for specific operations like Firebase login
+     * where we need to look up a user before authentication.
      */
     private static final ThreadLocal<Boolean> IGNORE_TENANT = ThreadLocal.withInitial(() -> false);
 
     /**
-     * Execute a runnable with tenant filtering bypassed.
-     * Use this for operations that need to query across tenants before user is authenticated.
+     * Execute a runnable with tenant filtering bypassed. Use this for operations that need to query
+     * across tenants before user is authenticated.
      */
     public static void executeWithoutTenantFilter(Runnable runnable) {
         try {
@@ -43,8 +43,8 @@ public class MybatisPlusConfig {
     }
 
     /**
-     * Execute a supplier with tenant filtering bypassed and return the result.
-     * Use this for operations that need to query across tenants before user is authenticated.
+     * Execute a supplier with tenant filtering bypassed and return the result. Use this for
+     * operations that need to query across tenants before user is authenticated.
      */
     public static <T> T executeWithoutTenantFilter(java.util.function.Supplier<T> supplier) {
         try {
@@ -56,8 +56,8 @@ public class MybatisPlusConfig {
     }
 
     /**
-     * Check if tenant filtering is currently bypassed.
-     * Used by MetaObjectHandler to skip auto-filling tenant_id.
+     * Check if tenant filtering is currently bypassed. Used by MetaObjectHandler to skip
+     * auto-filling tenant_id.
      */
     public static boolean isTenantFilterBypassed() {
         return Boolean.TRUE.equals(IGNORE_TENANT.get());
@@ -99,7 +99,8 @@ public class MybatisPlusConfig {
                                         || "sys_user_ott".equals(tableName)
                                         || "sys_dict_type".equals(tableName)
                                         || "sys_tenant".equals(tableName)
-                                        || "sys_permission".equals(tableName);
+                                        || "sys_permission".equals(tableName)
+                                        || "audit_log".equals(tableName);
                             }
                         }));
 

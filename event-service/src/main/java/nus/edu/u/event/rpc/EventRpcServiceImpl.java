@@ -29,6 +29,12 @@ public class EventRpcServiceImpl implements EventRpcService {
     private final GroupApplicationService groupApplicationService;
 
     @Override
+    public String getEventName(Long eventId) {
+        EventDO eventDO = eventMapper.selectById(eventId);
+        return eventDO.getName();
+    }
+
+    @Override
     public EventRespDTO getEvent(Long eventId) {
         EventDO event = eventMapper.selectById(eventId);
         if (event == null) {

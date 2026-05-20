@@ -5,4 +5,31 @@ spring:
       host: ${TEST_REDIS_HOST}
       port: ${TEST_REDIS_PORT}
       database: ${TEST_REDIS_DATABASE}
+      username: ${REDIS_USERNAME:default}
       password: ${TEST_REDIS_PASSWORD}
+
+  cloud:
+    gateway:
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:5173"
+            allowed-methods:
+              - "GET"
+              - "POST"
+              - "DELETE"
+              - "PATCH"
+              - "PUT"
+              - "OPTIONS"
+            allowed-headers:
+              - "Content-Type"
+              - "Authorization"
+              - "Accept"
+              - "Origin"
+              - "X-Requested-With"
+              - "Cache-Control"
+              - "Pragma"
+            allow-credentials: true
+            max-age: 360000

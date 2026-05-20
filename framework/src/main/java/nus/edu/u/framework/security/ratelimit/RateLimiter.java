@@ -7,8 +7,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 /**
- * Redis-based rate limiter for protecting authentication endpoints.
- * Uses sliding window approach with configurable limits.
+ * Redis-based rate limiter for protecting authentication endpoints. Uses sliding window approach
+ * with configurable limits.
  */
 @RequiredArgsConstructor
 @Slf4j

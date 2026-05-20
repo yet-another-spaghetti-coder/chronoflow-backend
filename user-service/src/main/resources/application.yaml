@@ -1,6 +1,11 @@
 server:
   port: 8081
 
+# Include OpenTelemetry trace/span IDs in log lines when present
+logging:
+  pattern:
+    console: "%d{dd-MM-yyyy HH:mm:ss.SSS} [traceId=%X{traceId:-} spanId=%X{spanId:-}] [%thread] %-5level %logger{36} - %msg%n"
+
 spring:
   application:
     name: user-service
@@ -60,12 +65,6 @@ spring:
             username: ${spring.cloud.nacos.username}
             password: ${spring.cloud.nacos.password}
 
-        flow-file:
-          file:
-            file: classpath:sentinel/flow-rules.json
-            data-type: json
-            rule-type: flow
-
         # 降级规则
         degrade-nacos:
           nacos:
@@ -77,12 +76,6 @@ spring:
             rule-type: degrade
             username: ${spring.cloud.nacos.username}
             password: ${spring.cloud.nacos.password}
-
-        degrade-file:
-          file:
-            file: classpath:sentinel/degrade-rules.json
-            data-type: json
-            rule-type: degrade
 
   config:
     import:
@@ -173,7 +166,9 @@ dubbo:
     address: nacos://${NACOS_HOST}:${NACOS_PORT}?username=${NACOS_USERNAME}&password=${NACOS_PASSWORD}
     # This will enable application-level service discovery only (the recommended service discovery method for Dubbo3).
     # For users upgrading from Dubbo2.x, please set the value to 'all' for smooth migration.
-    register-mode: instance
+    register-mode: all
+    # Use Nacos only for service registration; do not publish metadata to Nacos (avoids "publish nacos metadata failed" when Nacos is down or namespace/config issues).
+    use-as-metadata-center: false
     parameters:
       namespace: ${spring.profiles.active}
   protocol:
@@ -209,6 +204,10 @@ management:
     export:
       prometheus:
         enabled: true
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0
 
 chronoflow:
   security:
@@ -222,4 +221,4 @@ chronoflow:
   firebase:
     enabled: ${FIREBASE_ENABLED:true}
     credentials-base64: ${FIREBASE_SERVICE_ACCOUNT_JSON:}
-    project-id: ${FIREBASE_PROJECT_ID:chronoflow-noti-service}
+    project-id: ${FIREBASE_PROJECT_ID:chronoflow-1}

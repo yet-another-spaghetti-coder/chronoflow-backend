@@ -1,0 +1,74 @@
+# Kustomize overlay for ChronoFlow on Kubernetes.
+# Excludes: k8s/mysql/, k8s/perf/, k8s/grafana/ (apply those separately if needed).
+#
+# Usage (from repo root):
+#   kubectl apply -k k8s/
+#   kubectl kustomize k8s/   # print rendered YAML
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+
+  # External Secrets Operator wiring (operator CRDs must be installed on the cluster)
+  - external-secrets/namespace.yaml
+  - external-secrets/external-secret-aws.yaml
+  - external-secrets/external-secret-database.yaml
+  - external-secrets/external-secret-file.yaml
+  - external-secrets/external-secret-firebase.yaml
+  - external-secrets/external-secret-firebase-auth.yaml
+  - external-secrets/external-secret-pub-sub.yaml
+  - external-secrets/external-secret-redis.yaml
+  - external-secrets/external-secret-mongodb.yaml
+  - nacos/deployment.yaml
+
+  # Gateways & services
+  - gateway/deployment.yaml
+  - gateway/service.yaml
+  - gateway/hpa.yaml
+  - gateway/pdb.yaml
+  - gateway/podmonitoring.yaml
+
+  - user-service/deployment.yaml
+  - user-service/service.yaml
+  - user-service/hpa.yaml
+  - user-service/pdb.yaml
+  - user-service/podmonitoring.yaml
+
+  - event-service/deployment.yaml
+  - event-service/service.yaml
+  - event-service/hpa.yaml
+  - event-service/pdb.yaml
+  - event-service/podmonitoring.yaml
+
+  - task-service/deployment.yaml
+  - task-service/service.yaml
+  - task-service/hpa.yaml
+  - task-service/pdb.yaml
+  - task-service/podmonitoring.yaml
+
+  - attendee-service/deployment.yaml
+  - attendee-service/service.yaml
+  - attendee-service/hpa.yaml
+  - attendee-service/pdb.yaml
+  - attendee-service/podmonitoring.yaml
+
+  - file-service/deployment.yaml
+  - file-service/service.yaml
+  - file-service/hpa.yaml
+  - file-service/pdb.yaml
+  - file-service/podmonitoring.yaml
+
+  - notification-service/config.yaml
+  - notification-service/deployment.yaml
+  - notification-service/service.yaml
+  - notification-service/hpa.yaml
+  - notification-service/pdb.yaml
+  - notification-service/podmonitoring.yaml
+
+  - wsgateway/serviceaccount.yaml
+  - wsgateway/deployment.yaml
+  - wsgateway/service.yaml
+  - wsgateway/hpa.yaml
+  - wsgateway/pdb.yaml
+  - wsgateway/podmonitoring.yaml

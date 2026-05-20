@@ -11,12 +11,21 @@ import lombok.Data;
 @Data
 public class PermissionReqVO {
 
-    @Schema(description = "Permission name", requiredMode = Schema.RequiredMode.REQUIRED, example = "Create member")
+    @Schema(
+            description = "Permission name",
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            example = "Create member")
     private String name;
 
-    @Schema(description = "Permission key", requiredMode = Schema.RequiredMode.REQUIRED, example = "system:organizer:member:create")
+    @Schema(
+            description = "Permission key",
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            example = "system:organizer:member:create")
     private String key;
 
-    @Schema(description = "Permission description", requiredMode = Schema.RequiredMode.REQUIRED, example = "Create member permission")
+    @Schema(
+            description = "Permission description",
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            example = "Create member permission")
     private String description;
 }

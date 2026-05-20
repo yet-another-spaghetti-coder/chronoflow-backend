@@ -5,6 +5,4 @@ import nus.edu.u.user.domain.dataobject.user.UserOttDO;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
-public interface UserOttMapper extends BaseMapper<UserOttDO> {
-
-}
+public interface UserOttMapper extends BaseMapper<UserOttDO> {}

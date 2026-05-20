@@ -4,4 +4,4 @@ metadata:
   name: noti-config
   namespace: chronoflow
 data:
-  gcp.project.id: "chronoflow-noti-service"
+  gcp.project.id: "chronoflow-1"

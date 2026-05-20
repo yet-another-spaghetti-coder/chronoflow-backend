@@ -8,9 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Request VO for TOTP verification.
- */
+/** Request VO for TOTP verification. */
 @Schema(description = "TOTP Verification Request VO")
 @Data
 @NoArgsConstructor

@@ -25,7 +25,7 @@ Chronoflow uses a **dual-token authentication system** built on:
 |-----------|------------|---------|
 | Access Token | Sa-Token | Short-lived API authentication |
 | Refresh Token | Redis + Cookie | Long-lived session renewal |
-| Password Hashing | BCrypt | Secure password storage |
+| Password Hashing | BCrypt + Manual Salt | Secure salted password storage |
 | Session Storage | Redis | Distributed session management |
 
 ### Token Lifecycle

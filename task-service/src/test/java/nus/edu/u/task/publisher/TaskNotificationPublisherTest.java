@@ -45,7 +45,7 @@ class TaskNotificationPublisherTest {
         when(notificationPublisher.publish(any(NotificationRequestDTO.class)))
                 .thenReturn("push-id");
         NotificationRequestDTO expected =
-                TaskNotificationMapper.taskAssignmentToPushNotification(request);
+                TaskNotificationMapper.newTaskAssignmentToPushNotification(request);
 
         String result = taskNotificationPublisher.notifyNewTaskToAssigneePush(request);
 
@@ -61,7 +61,7 @@ class TaskNotificationPublisherTest {
         when(notificationPublisher.publish(any(NotificationRequestDTO.class)))
                 .thenReturn("email-id");
         NotificationRequestDTO expected =
-                TaskNotificationMapper.taskAssignmentToEmailNotification(request);
+                TaskNotificationMapper.newTaskAssignmentToEmailNotification(request);
 
         String result = taskNotificationPublisher.notifyNewTaskToAssigneeEmail(request);
 
@@ -76,7 +76,7 @@ class TaskNotificationPublisherTest {
     void notifyNewTaskToAssigneeWsDelegatesToNotificationPublisher() {
         when(notificationPublisher.publish(any(NotificationRequestDTO.class))).thenReturn("ws-id");
         NotificationRequestDTO expected =
-                TaskNotificationMapper.taskAssignmentToWsNotification(request);
+                TaskNotificationMapper.newTaskAssignmentToWsNotification(request);
 
         String result = taskNotificationPublisher.notifyNewTaskToAssigneeWs(request);
 

@@ -1,0 +1,6 @@
+# Namespace for ESO and the GSM auth ServiceAccount. Usually already exists when
+# External Secrets Operator is installed; applying this file is idempotent.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: external-secrets

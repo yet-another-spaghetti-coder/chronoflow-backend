@@ -107,6 +107,16 @@
             <groupId>nus.edu.u</groupId>
             <artifactId>common</artifactId>
         </dependency>
+
+        <!-- Micrometer / OpenTelemetry tracing so traceId/spanId propagate and appear in logs -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-otel</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-exporter-otlp</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

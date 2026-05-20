@@ -34,6 +34,9 @@ public class UserDO extends TenantBaseDO implements Serializable {
 
     private String password;
 
+    /** Password salt */
+    private String salt;
+
     private String remark;
 
     private String email;

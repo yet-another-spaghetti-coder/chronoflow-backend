@@ -5,14 +5,47 @@ metadata:
   namespace: chronoflow
   labels:
     app: gateway
-  annotations:
-    cloud.google.com/neg: '{"ingress": true}'
 spec:
-  type: LoadBalancer
-  ports:
-    - port: 80
-      targetPort: 8080
-      protocol: TCP
-      name: http
+  type: NodePort
   selector:
     app: gateway
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gateway
+  namespace: chronoflow
+  labels:
+    app: gateway
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: lb-ip-dev
+    networking.gke.io/managed-certificates: api-chronoflow-cert
+spec:
+  defaultBackend:
+    service:
+      name: gateway
+      port:
+        number: 80
+  rules:
+    - host: api.chronoflow.site
+      http:                        # ← this must exist
+        paths:
+          - path: /*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: gateway
+                port:
+                  number: 80
+---
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: api-chronoflow-cert
+  namespace: chronoflow
+spec:
+  domains:
+    - api.chronoflow.site

@@ -51,8 +51,7 @@ public class PushServiceImpl implements PushService {
             var dto =
                     PushRequestDTO.builder()
                             .eventId(base.getEventId())
-                            // per-device idempotency:
-                            .recipientKey("push:token:" + d.getToken())
+                            .recipientKey("push:device:" + d.getDeviceId())
                             .token(d.getToken())
                             .title(base.getTitle())
                             .body(base.getBody())

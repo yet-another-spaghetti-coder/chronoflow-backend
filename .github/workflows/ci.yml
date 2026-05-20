@@ -1,0 +1,274 @@
+name: Microservices CI
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - dev
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  detect-changes:
+    name: Detect Changed Services
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.resolve.outputs.services }}
+      all-services: ${{ steps.set-services.outputs.all }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed services
+        uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            user-service:
+              - 'user-service/**'
+            task-service:
+              - 'task-service/**'
+            notification-service:
+              - 'notification-service/**'
+            gateway:
+              - 'gateway/**'
+            file-service:
+              - 'file-service/**'
+            event-service:
+              - 'event-service/**'
+            attendee-service:
+              - 'attendee-service/**'
+            wsgateway:
+              - 'wsgateway/**'
+            shared-modules:
+              - 'framework/**'
+              - 'common/**'
+              - 'shared-api/**'
+              - 'pom.xml'
+            ci:
+              - '.github/workflows/**'
+
+      - name: Set all services list
+        id: set-services
+        run: |
+          echo "all=[\"user-service\",\"task-service\",\"notification-service\",\"gateway\",\"file-service\",\"event-service\",\"attendee-service\",\"wsgateway\"]" >> $GITHUB_OUTPUT
+
+      - name: Determine affected services
+        id: resolve
+        run: |
+          if [ "${{ steps.filter.outputs.shared-modules }}" = "true" ] || [ "${{ steps.filter.outputs.ci }}" = "true" ]; then
+            echo "Shared module or CI workflow changed. Building all services."
+            echo 'services=${{ steps.set-services.outputs.all }}' >> "$GITHUB_OUTPUT"  # ← single quotes
+            exit 0
+          fi
+      
+          SERVICES=()
+          [ "${{ steps.filter.outputs.user-service }}"           = "true" ] && SERVICES+=("user-service")
+          [ "${{ steps.filter.outputs.task-service }}"           = "true" ] && SERVICES+=("task-service")
+          [ "${{ steps.filter.outputs.notification-service }}"   = "true" ] && SERVICES+=("notification-service")
+          [ "${{ steps.filter.outputs.gateway }}"                = "true" ] && SERVICES+=("gateway")
+          [ "${{ steps.filter.outputs.file-service }}"           = "true" ] && SERVICES+=("file-service")
+          [ "${{ steps.filter.outputs.event-service }}"          = "true" ] && SERVICES+=("event-service")
+          [ "${{ steps.filter.outputs.attendee-service }}"       = "true" ] && SERVICES+=("attendee-service")
+          [ "${{ steps.filter.outputs.wsgateway }}"              = "true" ] && SERVICES+=("wsgateway")
+      
+          if [ ${#SERVICES[@]} -eq 0 ]; then
+            echo "No service-specific changes detected."
+            echo "services=[]" >> "$GITHUB_OUTPUT"
+          else
+            SERVICES_JSON=$(printf '%s\n' "${SERVICES[@]}" | jq -Rsc '[split("\n")[] | select(length > 0)]')
+            echo "services=${SERVICES_JSON}" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-and-test:
+    name: Build & JUnit & Lint- ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.services != '[]'
+    strategy:
+      matrix:
+        service: ${{ fromJson(needs.detect-changes.outputs.services) }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          java-version: 17
+          distribution: 'temurin'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Lint (Spotless + Checkstyle) for ${{ matrix.service }}
+        run: mvn -B -pl ${{ matrix.service }} -am spotless:check checkstyle:check
+
+      - name: Build & Run tests for ${{ matrix.service }}
+        run: mvn -B -pl ${{ matrix.service }} -am test
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        if: hashFiles(format('{0}/target/site/jacoco/', matrix.service)) != ''
+        with:
+          name: ${{ matrix.service }}-test-results
+          path: ./${{ matrix.service }}/target/site/jacoco/*
+          retention-days: 1
+  sca-sbom:
+    name: SCA & SBOM - ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        service: ${{ fromJson(needs.detect-changes.outputs.services) }}
+      fail-fast: false
+    needs: [ detect-changes, build-and-test ]
+    if: needs.detect-changes.outputs.services != '[]'
+
+    env:
+      SBOM_FILE: ${{ matrix.service }}-sbom.spdx.json
+      TABLE_REPORT: ${{ matrix.service }}-report.txt
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          java-version: 17
+          distribution: 'temurin'
+
+      - name: Build (skip tests) for ${{ matrix.service }}
+        run: mvn -B -pl ${{ matrix.service }} -am package -DskipTests
+
+      - name: Build Docker image locally
+        run: |
+          docker build -t localbuild/${{ matrix.service }}:${{ github.sha }} ./${{ matrix.service }}
+
+      - name: Generate SBOM via Syft
+        uses: anchore/sbom-action@v0.24.0
+        with:
+          image: localbuild/${{ matrix.service }}:${{ github.sha }}
+          format: spdx-json
+          output-file: ${{ env.SBOM_FILE }}
+          upload-artifact: false
+          upload-release-assets: false
+
+      - name: SCA via Anchore (table)
+        uses: anchore/scan-action@v7
+        with:
+          sbom: ${{ env.SBOM_FILE }}
+          output-format: table
+          output-file: ${{ env.TABLE_REPORT }}
+          fail-build: false
+          severity-cutoff: 'high'
+
+      - name: Upload SBOM & SCA artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: sbom-and-sca-${{ matrix.service }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ env.SBOM_FILE }}
+            ${{ env.TABLE_REPORT }}
+          retention-days: 5
+
+  docker-push:
+    name: Docker Push - ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    environment: dev
+    needs: [detect-changes, build-and-test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev' && github.repository_owner == 'yet-another-spaghetti-coder'
+    strategy:
+      matrix:
+        service: ${{ fromJson(needs.detect-changes.outputs.services) }}
+    env:
+      REGISTRY: asia-southeast1-docker.pkg.dev
+      PROJECT_ID: chronoflow-1
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v3
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker asia-southeast1-docker.pkg.dev --quiet
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          java-version: 17
+          distribution: 'temurin'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Build JAR for ${{ matrix.service }}
+        run: mvn -B -pl ${{ matrix.service }} -am package -DskipTests
+
+      - name: Build and Push Docker image
+        run: |
+          IMAGE_TAG=${{ github.sha }}
+          LATEST_TAG=latest
+          FULL_IMAGE=${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ matrix.service }}/${{ matrix.service }}:$IMAGE_TAG
+          FULL_IMAGE_LATEST=${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ matrix.service }}/${{ matrix.service }}:$LATEST_TAG
+          docker build -t "$FULL_IMAGE" -t "$FULL_IMAGE_LATEST" ./${{ matrix.service }}
+          docker push "$FULL_IMAGE"
+          docker push "$FULL_IMAGE_LATEST"
+
+  sonar-scan:
+    name: Sonar Scan
+    runs-on: ubuntu-latest
+    environment: dev
+    needs: detect-changes
+    if: github.event_name == 'push'
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          java-version: 17
+          distribution: 'temurin'
+
+      - name: Cache SonarQube packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Cache Maven packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: SonarCloud Scan
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -DskipTests=true \
+            -Djacoco.skip=true -Dsonar.projectKey=yet-another-spaghetti-coder_chronoflow-backend

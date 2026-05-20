@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import nus.edu.u.attendee.domain.vo.attendee.AttendeeDashboardRespVO;
 import nus.edu.u.attendee.domain.vo.attendee.AttendeeInfoRespVO;
 import nus.edu.u.attendee.domain.vo.attendee.AttendeeQrCodeRespVO;
 import nus.edu.u.attendee.domain.vo.attendee.AttendeeReqVO;
@@ -35,6 +36,14 @@ public class AttendeeController {
     @Resource private AttendeeService attendeeService;
 
     @Resource private ExcelService excelService;
+
+    @GetMapping("/dashboard/{eventId}")
+    public CommonResult<AttendeeDashboardRespVO> dashboard(
+            @PathVariable("eventId") @NotNull Long eventId,
+            @RequestParam(name = "page", defaultValue = "1") Integer page,
+            @RequestParam(name = "pageSize", defaultValue = "20") Integer pageSize) {
+        return success(attendeeService.getDashboard(eventId, page, pageSize));
+    }
 
     @GetMapping("list/{eventId}")
     public CommonResult<List<AttendeeQrCodeRespVO>> list(

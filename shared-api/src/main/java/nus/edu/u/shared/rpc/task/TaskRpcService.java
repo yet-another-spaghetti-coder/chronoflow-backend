@@ -23,4 +23,6 @@ public interface TaskRpcService {
      * @param eventId event identifier
      */
     void deleteTasksByEventId(Long eventId);
+
+    TaskDTO getTaskDetail(Long taskId);
 }

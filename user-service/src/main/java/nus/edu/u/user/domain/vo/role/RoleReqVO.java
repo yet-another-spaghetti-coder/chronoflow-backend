@@ -13,14 +13,23 @@ import lombok.Data;
 @Data
 public class RoleReqVO {
 
-    @Schema(description = "Role name", requiredMode = Schema.RequiredMode.REQUIRED, example = "Manager")
+    @Schema(
+            description = "Role name",
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            example = "Manager")
     @Size(min = 1, max = 100, message = "Role name should between 1 and 100")
     private String name;
 
-    @Schema(description = "Role key", requiredMode = Schema.RequiredMode.REQUIRED, example = "MANAGER")
+    @Schema(
+            description = "Role key",
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            example = "MANAGER")
     @Size(min = 1, max = 50, message = "Role key should between 1 and 50")
     private String key;
 
-    @Schema(description = "Permissions id list", requiredMode = Schema.RequiredMode.REQUIRED, example = "[1971465366969307139, 1971465366969307140]")
+    @Schema(
+            description = "Permissions id list",
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            example = "[1971465366969307139, 1971465366969307140]")
     private List<Long> permissions;
 }

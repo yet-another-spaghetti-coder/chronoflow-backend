@@ -213,49 +213,6 @@ class TaskApplicationServiceImplTest {
     }
 
     @Test
-    void createTask_whenAssignerMissing_usesNullTenant() {
-        long eventId = 44L;
-        long organizerId = 800L;
-        long assigneeId = 801L;
-
-        stubEvents(
-                Map.of(
-                        eventId,
-                        event(
-                                eventId,
-                                organizerId,
-                                "Workshop",
-                                LocalDateTime.now(),
-                                LocalDateTime.now().plusHours(1))));
-
-        stubUsers(Map.of(assigneeId, user(assigneeId, "Member", 9L)));
-
-        TaskStrategy createStrategy =
-                new TaskStrategy() {
-                    @Override
-                    public TaskActionEnum getType() {
-                        return TaskActionEnum.CREATE;
-                    }
-
-                    @Override
-                    public void execute(TaskDO task, TaskActionDTO actionDTO, Object... params) {
-                        task.setId(900L);
-                    }
-                };
-        when(taskActionFactory.getStrategy(TaskActionEnum.CREATE)).thenReturn(createStrategy);
-
-        TaskCreateReqVO req = new TaskCreateReqVO();
-        req.setName("Decorate");
-        req.setTargetUserId(assigneeId);
-
-        TaskRespVO response = service.createTask(eventId, req);
-
-        assertThat(response.getId()).isEqualTo(900L);
-        assertThat(response.getAssignerUser()).isNull();
-        assertThat(response.getAssignedUser().getId()).isEqualTo(assigneeId);
-    }
-
-    @Test
     void updateTask_updatesFieldsAndResolvesGroups() {
         long eventId = 44L;
         long taskId = 5L;

@@ -4,8 +4,8 @@ import nus.edu.u.user.domain.vo.auth.FirebaseRegisterReqVO;
 import nus.edu.u.user.domain.vo.auth.LoginRespVO;
 
 /**
- * Firebase authentication service interface.
- * Handles Firebase ID token verification and Sa-Token session creation.
+ * Firebase authentication service interface. Handles Firebase ID token verification and Sa-Token
+ * session creation.
  */
 public interface FirebaseAuthService {
 
@@ -18,7 +18,10 @@ public interface FirebaseAuthService {
      * @param clientIp Client IP address for fingerprinting
      * @return Login response with user info and tokens
      */
-    LoginRespVO firebaseLogin(String firebaseIdToken, boolean remember, String userAgent, String clientIp);
+    LoginRespVO firebaseLogin(
+            String firebaseIdToken, boolean remember, String userAgent, String clientIp);
+
+    String generateOTT(long userId);
 
     /**
      * Register new user with Firebase credentials.
@@ -29,7 +32,8 @@ public interface FirebaseAuthService {
      * @param clientIp Client IP address for fingerprinting
      * @return Login response with user info and tokens
      */
-    LoginRespVO firebaseRegister(String firebaseIdToken, FirebaseRegisterReqVO reqVO, String userAgent, String clientIp);
+    LoginRespVO firebaseRegister(
+            String firebaseIdToken, FirebaseRegisterReqVO reqVO, String userAgent, String clientIp);
 
     /**
      * Refresh access token with rotation and reuse detection.

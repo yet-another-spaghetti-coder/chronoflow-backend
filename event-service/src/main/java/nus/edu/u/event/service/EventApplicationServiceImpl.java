@@ -35,6 +35,8 @@ import nus.edu.u.event.mapper.EventMapper;
 import nus.edu.u.event.mapper.UserGroupMapper;
 import nus.edu.u.event.service.validation.EventValidationContext;
 import nus.edu.u.event.service.validation.EventValidationHandler;
+import nus.edu.u.framework.security.audit.AuditType;
+import nus.edu.u.framework.security.audit.Auditable;
 import nus.edu.u.shared.rpc.group.GroupDTO;
 import nus.edu.u.shared.rpc.task.TaskDTO;
 import nus.edu.u.shared.rpc.task.TaskRpcService;
@@ -62,6 +64,7 @@ public class EventApplicationServiceImpl implements EventApplicationService {
     private TaskRpcService taskRpcService;
 
     @Override
+    @Auditable(operation = "Create Event", type = AuditType.DATA_CHANGE, targetType = "Event")
     public EventRespVO createEvent(EventCreateReqVO reqVO) {
         runValidations(EventValidationContext.forCreate(reqVO));
         EventDO event = prepareForCreate(reqVO);
@@ -161,6 +164,11 @@ public class EventApplicationServiceImpl implements EventApplicationService {
     }
 
     @Override
+    @Auditable(
+            operation = "Update Event",
+            type = AuditType.DATA_CHANGE,
+            targetType = "Event",
+            targetId = "#id")
     public UpdateEventRespVO updateEvent(Long id, EventUpdateReqVO reqVO) {
         EventDO current = eventMapper.selectById(id);
         if (current == null) {
@@ -182,6 +190,11 @@ public class EventApplicationServiceImpl implements EventApplicationService {
     }
 
     @Override
+    @Auditable(
+            operation = "Delete Event",
+            type = AuditType.DATA_CHANGE,
+            targetType = "Event",
+            targetId = "#id")
     public boolean deleteEvent(Long id) {
         EventDO db = eventMapper.selectById(id);
         if (db == null) {
@@ -207,6 +220,11 @@ public class EventApplicationServiceImpl implements EventApplicationService {
     }
 
     @Override
+    @Auditable(
+            operation = "Restore Event",
+            type = AuditType.DATA_CHANGE,
+            targetType = "Event",
+            targetId = "#id")
     public boolean restoreEvent(Long id) {
         EventDO db = eventMapper.selectRawById(id);
         if (db == null) {

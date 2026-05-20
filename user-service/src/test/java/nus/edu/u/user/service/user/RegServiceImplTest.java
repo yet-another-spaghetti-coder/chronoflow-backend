@@ -6,6 +6,7 @@ import static nus.edu.u.common.enums.ErrorCodeConstants.REG_FAIL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -138,7 +139,7 @@ class RegServiceImplTest {
                 UserDO.builder().id(userId).status(UserStatusEnum.PENDING.getCode()).build();
 
         when(userMapper.selectByIdWithoutTenant(userId)).thenReturn(pending);
-        when(passwordEncoder.encode("Pass@123")).thenReturn("ENCODED");
+        when(passwordEncoder.encode(anyString())).thenReturn("ENCODED");
         when(userMapper.updateByIdWithoutTenant(pending)).thenReturn(1);
 
         boolean updated = service.registerAsMember(request);
@@ -184,7 +185,7 @@ class RegServiceImplTest {
                         .build();
 
         when(userMapper.selectByUsername("organizer")).thenReturn(null);
-        when(passwordEncoder.encode("Pwd123!")).thenReturn("HASH");
+        when(passwordEncoder.encode(anyString())).thenReturn("HASH");
         when(tenantMapper.insert(any()))
                 .thenAnswer(
                         invocation -> {

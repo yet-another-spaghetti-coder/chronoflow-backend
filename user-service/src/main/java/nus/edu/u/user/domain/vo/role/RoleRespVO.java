@@ -1,8 +1,7 @@
 package nus.edu.u.user.domain.vo.role;
 
-import java.util.List;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,7 +25,8 @@ public class RoleRespVO {
     private String key;
 
     @Schema(description = "If the role is the default role", example = "false")
-    @Builder.Default private Boolean isDefault = false;
+    @Builder.Default
+    private Boolean isDefault = false;
 
     @Schema(description = "Permissions info list")
     private List<PermissionRespVO> permissions;

@@ -14,8 +14,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 
 /**
- * Firebase Admin SDK initialization configuration.
- * Supports both file-based and Base64-encoded credentials.
+ * Firebase Admin SDK initialization configuration. Supports both file-based and Base64-encoded
+ * credentials.
  */
 @Configuration
 @Slf4j
@@ -48,7 +48,8 @@ public class FirebaseConfig {
 
             InputStream serviceAccount = getCredentialsStream();
             if (serviceAccount == null) {
-                log.warn("Firebase credentials not configured. Firebase authentication will not work.");
+                log.warn(
+                        "Firebase credentials not configured. Firebase authentication will not work.");
                 return;
             }
 
@@ -66,7 +67,9 @@ public class FirebaseConfig {
                     projectId != null && !projectId.isBlank() ? projectId : "(from credentials)");
 
         } catch (Exception e) {
-            log.error("Failed to initialize Firebase Admin SDK: {}. Firebase authentication will not work.", e.getMessage());
+            log.error(
+                    "Failed to initialize Firebase Admin SDK: {}. Firebase authentication will not work.",
+                    e.getMessage());
             // Don't throw - allow app to start without Firebase if credentials are invalid
         }
     }

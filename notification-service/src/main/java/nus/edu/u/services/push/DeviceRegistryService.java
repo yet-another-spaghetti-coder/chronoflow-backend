@@ -10,6 +10,8 @@ public interface DeviceRegistryService {
 
     void revokeByToken(String token);
 
+    void revokeByTokenForUser(String userId, String token);
+
     /** Old: returns entities (no caching) */
     List<NotificationDeviceDO> activeDevices(String userId);
 
@@ -17,4 +19,6 @@ public interface DeviceRegistryService {
     List<NotificationDeviceViewDTO> activeDeviceViews(String userId);
 
     void revokeAllForUser(String userId);
+
+    void revokeByDeviceId(String userId, String deviceId);
 }

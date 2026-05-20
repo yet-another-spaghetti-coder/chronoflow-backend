@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nus.edu.u.common.jackson.desensitize.Desensitize;
+import nus.edu.u.common.jackson.desensitize.DesensitizeType;
 
 /**
  * @author Lu Shuwen
@@ -17,5 +19,6 @@ public class RegSearchRespVO {
 
     private String organizationName;
 
+    @Desensitize(type = DesensitizeType.EMAIL)
     private String email;
 }

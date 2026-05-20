@@ -39,6 +39,28 @@ public class UserRpcServiceImpl implements UserRpcService {
     private final UserService userService;
 
     @Override
+    public UserProfileDTO getUserById(Long userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException("userId is required");
+        }
+
+        UserDO user = userMapper.selectById(userId);
+
+        if (user == null) {
+            return null; // or throw, depending on your contract preference
+        }
+
+        return UserProfileDTO.builder()
+                .id(user.getId())
+                .name(user.getUsername()) // mapping username -> name
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .roles(Collections.emptyList())
+                .isRegistered(true) // or compute properly if you want
+                .build();
+    }
+
+    @Override
     public boolean exists(Long userId) {
         if (userId == null) {
             log.warn("exists called with null userId");
@@ -175,17 +197,16 @@ public class UserRpcServiceImpl implements UserRpcService {
     }
 
     private UserProfileDTO convertToUserProfileDTO(UserProfileRespVO vo) {
-        if (vo == null) {
-            return null;
-        }
-        UserProfileDTO dto = new UserProfileDTO();
-        dto.setId(vo.getId());
-        dto.setName(vo.getName());
-        dto.setEmail(vo.getEmail());
-        dto.setPhone(vo.getPhone());
-        dto.setRoles(vo.getRoles());
-        dto.setRegistered(vo.isRegistered());
-        return dto;
+        if (vo == null) return null;
+
+        return UserProfileDTO.builder()
+                .id(vo.getId())
+                .name(vo.getName())
+                .email(vo.getEmail())
+                .phone(vo.getPhone())
+                .roles(vo.getRoles())
+                .isRegistered(vo.isRegistered())
+                .build();
     }
 
     private UserInfoDTO convertToUserInfoDTO(UserDO userDO, List<RoleBriefDTO> roles) {

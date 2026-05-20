@@ -13,4 +13,6 @@ public interface UserRpcService {
     TenantDTO getTenantById(Long tenantId);
 
     List<UserProfileDTO> getEnabledUserProfiles();
+
+    UserProfileDTO getUserById(Long userId);
 }

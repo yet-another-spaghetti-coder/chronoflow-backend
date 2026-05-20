@@ -8,6 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nus.edu.u.common.jackson.desensitize.Desensitize;
+import nus.edu.u.common.jackson.desensitize.DesensitizeType;
 
 @Data
 @Builder
@@ -23,6 +25,9 @@ public class UserInfoDTO implements Serializable {
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
     private String email;
+
+    @Desensitize(type = DesensitizeType.PHONE)
     private String phone;
+
     private List<RoleBriefDTO> roles;
 }

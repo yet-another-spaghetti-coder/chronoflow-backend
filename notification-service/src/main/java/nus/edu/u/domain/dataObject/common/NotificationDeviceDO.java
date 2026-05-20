@@ -10,7 +10,7 @@ import nus.edu.u.enums.push.PushPlatform;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@EqualsAndHashCode(callSuper=false)
+@EqualsAndHashCode(callSuper = false)
 @Table(
         name = "notification_device",
         uniqueConstraints = @UniqueConstraint(name = "uk_device_token", columnNames = "token"),
@@ -31,6 +31,9 @@ public class NotificationDeviceDO extends BaseNotificationEntity {
 
     @Column(name = "token", length = 1024, nullable = false)
     private String token; // FCM registration token
+
+    @Column(name = "device_id", length = 128, nullable = false)
+    private String deviceId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 16, nullable = false)

@@ -3,6 +3,7 @@ kind: Deployment
 metadata:
   name: wsgateway
   namespace: chronoflow
+  # secretKeyRef Secrets (pub-sub, firebase) are synced from GCP SM by ExternalSecrets in k8s/external-secrets/.
   labels:
     app: wsgateway
     version: v1
@@ -22,13 +23,14 @@ spec:
         app: wsgateway
         version: v1
     spec:
+      serviceAccountName: wsgateway-sa
       tolerations:
         - key: "node.gke.io/balloon-pod-resize"
           operator: "Exists"
           effect: "NoSchedule"
       containers:
         - name: wsgateway
-          image: e1241986/wsgateway:latest
+          image: shchow/wsgateway:latest
           imagePullPolicy: Always
           ports:
             - name: http
@@ -49,6 +51,11 @@ spec:
               value: "nacos"
             - name: NACOS_PASSWORD
               value: "nacos"
+            - name: MONGODB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb
+                  key: uri
             - name: PUB_SUB_SERVICE_ACCOUNT_JSON
               valueFrom:
                 secretKeyRef:

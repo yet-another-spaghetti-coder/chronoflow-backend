@@ -23,6 +23,7 @@
         <id    property="id"         column="id"/>
         <result property="username"  column="username"/>
         <result property="password"  column="password"/>
+        <result property="salt"      column="salt"/>
         <result property="remark"    column="remark"/>
         <result property="email"     column="email"/>
         <result property="phone"     column="phone"/>
@@ -40,6 +41,7 @@
         <set>
             <if test="username != null">username = #{username},</if>
             <if test="password != null">password = #{password},</if>
+            <if test="salt != null">salt = #{salt},</if>
             <if test="remark != null">remark = #{remark},</if>
             <if test="email != null">email = #{email},</if>
             <if test="phone != null">phone = #{phone},</if>
@@ -154,6 +156,7 @@
             id,
             username,
             password,
+            salt,
             remark,
             email,
             phone,
@@ -161,7 +164,10 @@
             login_time,
             dept_id,
             post_list,
-            tenant_id
+            tenant_id,
+            firebase_uid,
+            totp_secret,
+            totp_enabled
         FROM sys_user
         WHERE id = #{id}
           AND deleted = 0
@@ -171,6 +177,7 @@
             id,
             username,
             password,
+            salt,
             remark,
             email,
             phone,
@@ -191,6 +198,7 @@
             id,
             username,
             password,
+            salt,
             remark,
             email,
             phone,

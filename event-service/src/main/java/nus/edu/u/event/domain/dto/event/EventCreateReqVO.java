@@ -15,7 +15,10 @@ public class EventCreateReqVO {
 
     @NotBlank(message = "eventName cannot be empty")
     @JsonProperty("name")
-    @Schema(description = "Event Name", requiredMode = Schema.RequiredMode.REQUIRED, example = "Event Name")
+    @Schema(
+            description = "Event Name",
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            example = "Event Name")
     private String eventName;
 
     @Schema(description = "Event Description", example = "Event Description")

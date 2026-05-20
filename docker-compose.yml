@@ -1,3 +1,4 @@
+version: '3.8'
 services:
   mysql:
     image: mysql:8.0
@@ -27,8 +28,7 @@ services:
       - chronoflow-net
 
   nacos:
-    platform: linux/amd64
-    image: nacos/nacos-server:v2.3.2
+    image: nacos/nacos-server:v2.4.3
     container_name: nacos
     environment:
       - PREFER_HOST_MODE=hostname

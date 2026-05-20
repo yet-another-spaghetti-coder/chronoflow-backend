@@ -1,0 +1,13 @@
+# Apply this ConfigMap after applying k8s/nacos/deployment.yaml so Nacos uses
+# in-cluster MySQL (mysql.chronoflow.svc.cluster.local) instead of an external host.
+# This overwrites the nacos-cm defined in nacos/deployment.yaml.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nacos-cm
+  namespace: chronoflow
+data:
+  mysql.host: "mysql.chronoflow.svc.cluster.local"
+  mysql.db.name: "nacos"
+  mysql.port: "3306"
+  mysql.user: "nacos"

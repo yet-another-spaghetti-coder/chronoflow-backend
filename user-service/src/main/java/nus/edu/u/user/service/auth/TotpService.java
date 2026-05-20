@@ -9,17 +9,14 @@ import dev.samstevens.totp.secret.DefaultSecretGenerator;
 import dev.samstevens.totp.secret.SecretGenerator;
 import dev.samstevens.totp.time.SystemTimeProvider;
 import dev.samstevens.totp.time.TimeProvider;
+import java.util.Base64;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.Base64;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
-/**
- * TOTP (Time-based One-Time Password) service for two-factor authentication.
- */
+/** TOTP (Time-based One-Time Password) service for two-factor authentication. */
 @Service
 @Slf4j
 public class TotpService {
@@ -44,26 +41,25 @@ public class TotpService {
         this.codeVerifier = new DefaultCodeVerifier(codeGenerator, timeProvider);
     }
 
-    /**
-     * Generate a new TOTP secret.
-     */
+    /** Generate a new TOTP secret. */
     public String generateSecret() {
         return secretGenerator.generate();
     }
 
     /**
-     * Generate QR code data URI for the given secret and user email.
-     * Returns a base64-encoded PNG image as a data URI.
+     * Generate QR code data URI for the given secret and user email. Returns a base64-encoded PNG
+     * image as a data URI.
      */
     public String generateQrCodeDataUri(String secret, String email) {
-        QrData data = new QrData.Builder()
-                .label(email)
-                .secret(secret)
-                .issuer(ISSUER)
-                .algorithm(HashingAlgorithm.SHA1)
-                .digits(6)
-                .period(30)
-                .build();
+        QrData data =
+                new QrData.Builder()
+                        .label(email)
+                        .secret(secret)
+                        .issuer(ISSUER)
+                        .algorithm(HashingAlgorithm.SHA1)
+                        .digits(6)
+                        .period(30)
+                        .build();
 
         try {
             byte[] imageData = qrGenerator.generate(data);
@@ -75,19 +71,14 @@ public class TotpService {
         }
     }
 
-    /**
-     * Generate the TOTP URI for manual entry in authenticator apps.
-     */
+    /** Generate the TOTP URI for manual entry in authenticator apps. */
     public String generateTotpUri(String secret, String email) {
         return String.format(
                 "otpauth://totp/%s:%s?secret=%s&issuer=%s&algorithm=SHA1&digits=6&period=30",
-                ISSUER, email, secret, ISSUER
-        );
+                ISSUER, email, secret, ISSUER);
     }
 
-    /**
-     * Verify a TOTP code against the secret.
-     */
+    /** Verify a TOTP code against the secret. */
     public boolean verifyCode(String secret, String code) {
         if (secret == null || code == null) {
             return false;
@@ -96,8 +87,8 @@ public class TotpService {
     }
 
     /**
-     * Create a temporary MFA token for pending authentication.
-     * This token is used between password verification and TOTP verification.
+     * Create a temporary MFA token for pending authentication. This token is used between password
+     * verification and TOTP verification.
      *
      * @param userId User ID awaiting MFA
      * @param rememberMe Remember me flag
@@ -106,12 +97,9 @@ public class TotpService {
     public String createMfaToken(Long userId, boolean rememberMe) {
         String token = UUID.randomUUID().toString();
         String value = userId + ":" + rememberMe;
-        redisTemplate.opsForValue().set(
-                MFA_TOKEN_KEY + token,
-                value,
-                MFA_TOKEN_EXPIRE_SECONDS,
-                TimeUnit.SECONDS
-        );
+        redisTemplate
+                .opsForValue()
+                .set(MFA_TOKEN_KEY + token, value, MFA_TOKEN_EXPIRE_SECONDS, TimeUnit.SECONDS);
         log.debug("Created MFA token for userId={}", userId);
         return token;
     }
@@ -146,8 +134,6 @@ public class TotpService {
         }
     }
 
-    /**
-     * Data class for MFA token contents.
-     */
+    /** Data class for MFA token contents. */
     public record MfaTokenData(Long userId, boolean rememberMe) {}
 }

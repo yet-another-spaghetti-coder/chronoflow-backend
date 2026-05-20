@@ -9,9 +9,11 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface NotificationDeviceRepository extends JpaRepository<NotificationDeviceDO, String> {
-    Optional<NotificationDeviceDO> findByToken(String token);
+    List<NotificationDeviceDO> findByToken(String token);
 
     List<NotificationDeviceDO> findByUserIdAndStatus(String userId, DeviceStatus status);
 
-    boolean existsByUserIdAndToken(String userId, String token);
+    Optional<NotificationDeviceDO> findByUserIdAndToken(String userId, String token);
+
+    Optional<NotificationDeviceDO> findByUserIdAndDeviceId(String userId, String deviceId);
 }

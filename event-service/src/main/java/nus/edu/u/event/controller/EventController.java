@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.core.domain.CommonResult;
 import nus.edu.u.event.domain.dto.event.EventCreateReqVO;
 import nus.edu.u.event.domain.dto.event.EventGroupRespVO;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/events")
 @Validated
 @RequiredArgsConstructor
+@Slf4j
 public class EventController {
 
     private final EventApplicationService eventApplicationService;
@@ -42,6 +44,10 @@ public class EventController {
     public CommonResult<EventRespVO> create(@Valid @RequestBody EventCreateReqVO request) {
         Long organizerId = StpUtil.getLoginIdAsLong();
         request.setOrganizerId(organizerId);
+        log.info(
+                "Creating event for organizerId={} with title={}",
+                organizerId,
+                request.getEventName());
         EventRespVO resp = eventApplicationService.createEvent(request);
         return success(resp);
     }
@@ -49,12 +55,14 @@ public class EventController {
     @GetMapping("/{id}")
     @Operation(summary = "Get an event by id")
     public CommonResult<EventRespVO> getById(@PathVariable Long id) {
+        log.info("Fetching event by id={}", id);
         return success(eventApplicationService.getEvent(id));
     }
 
     @GetMapping
     @Operation(summary = "Get all events")
     public CommonResult<List<EventRespVO>> list() {
+        log.info("Listing all events");
         return success(eventApplicationService.list());
     }
 
@@ -63,6 +71,7 @@ public class EventController {
     @Operation(summary = "Update an event")
     public CommonResult<UpdateEventRespVO> update(
             @PathVariable Long id, @Valid @RequestBody EventUpdateReqVO request) {
+        log.info("Updating event id={} with payload", id);
         UpdateEventRespVO respVO = eventApplicationService.updateEvent(id, request);
         return success(respVO);
     }
@@ -71,6 +80,7 @@ public class EventController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete an event")
     public CommonResult<Boolean> delete(@PathVariable Long id) {
+        log.info("Deleting event id={}", id);
         return success(eventApplicationService.deleteEvent(id));
     }
 
@@ -78,6 +88,7 @@ public class EventController {
     @PatchMapping("/{id}/restore")
     @Operation(summary = "Restore an event")
     public CommonResult<Boolean> restore(@PathVariable Long id) {
+        log.info("Restoring soft-deleted event id={}", id);
         return success(eventApplicationService.restoreEvent(id));
     }
 
@@ -85,6 +96,7 @@ public class EventController {
     @GetMapping("/{id}/assignable-groups")
     @Operation(summary = "Get assignable groups for an event")
     public CommonResult<List<EventGroupRespVO>> assignableGroups(@PathVariable("id") Long eventId) {
+        log.info("Fetching assignable groups for eventId={}", eventId);
         return success(eventApplicationService.findAssignableGroups(eventId));
     }
 }

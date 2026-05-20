@@ -29,8 +29,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * Firebase authentication controller.
- * Provides endpoints for Firebase-based login, registration, and token refresh.
+ * Firebase authentication controller. Provides endpoints for Firebase-based login, registration,
+ * and token refresh.
  */
 @Tag(name = "Firebase Authentication Controller")
 @RestController
@@ -48,8 +48,8 @@ public class FirebaseAuthController {
     @Resource private SecurityAuditLogger auditLogger;
 
     /**
-     * Login with Firebase ID token.
-     * The Firebase ID token should be passed in the Authorization header as Bearer token.
+     * Login with Firebase ID token. The Firebase ID token should be passed in the Authorization
+     * header as Bearer token.
      */
     @SaIgnore
     @PostMapping("/firebase-login")
@@ -78,9 +78,48 @@ public class FirebaseAuthController {
         return success(loginRespVO);
     }
 
+    @SaIgnore
+    @PostMapping("/exchangeFirebaseToken")
+    @Operation(summary = "Exchange Firebase ID token with backend OTT")
+    public CommonResult<String> exchangeFirebaseToken(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader,
+            @RequestBody(required = false) FirebaseLoginReqVO reqVO,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        try {
+            String clientIp = getClientIp(request);
+            String userAgent = request.getHeader("User-Agent");
+
+            // Rate limiting
+            if (!rateLimiter.isAllowed("exchange-firebase-token", clientIp)) {
+                auditLogger.log(
+                        SecurityEvent.RATE_LIMIT_EXCEEDED,
+                        null,
+                        clientIp,
+                        "exchange-firebase-token");
+                throw new RuntimeException("Too many login attempts. Please try again later.");
+            }
+
+            String idToken = extractBearerToken(authHeader);
+            boolean remember = reqVO != null && reqVO.isRemember();
+
+            LoginRespVO loginRespVO =
+                    firebaseAuthService.firebaseLogin(idToken, remember, userAgent, clientIp);
+            String oneTimeToken = firebaseAuthService.generateOTT(loginRespVO.getUser().getId());
+            log.info(
+                    "Firebase token exchange succeeded for userId={}, clientIp={}",
+                    loginRespVO.getUser().getId(),
+                    clientIp);
+            return success(oneTimeToken);
+        } catch (Exception e) {
+            log.warn("Firebase token exchange failed: {}", e.getMessage());
+            return CommonResult.error(e.hashCode(), e.getMessage());
+        }
+    }
+
     /**
-     * Register with Firebase credentials.
-     * The Firebase ID token should be passed in the Authorization header as Bearer token.
+     * Register with Firebase credentials. The Firebase ID token should be passed in the
+     * Authorization header as Bearer token.
      */
     @SaIgnore
     @PostMapping("/firebase-register")
@@ -107,10 +146,7 @@ public class FirebaseAuthController {
         return success(loginRespVO);
     }
 
-    /**
-     * Refresh access token with rotation.
-     * Uses enhanced token rotation with reuse detection.
-     */
+    /** Refresh access token with rotation. Uses enhanced token rotation with reuse detection. */
     @SaIgnore
     @PostMapping("/firebase-refresh")
     @Operation(summary = "Refresh access token with rotation")
@@ -128,9 +164,7 @@ public class FirebaseAuthController {
         return success(loginRespVO);
     }
 
-    /**
-     * Enhanced logout that invalidates both Sa-Token and Firebase tokens.
-     */
+    /** Enhanced logout that invalidates both Sa-Token and Firebase tokens. */
     @PostMapping("/firebase-logout")
     @Operation(summary = "Logout and invalidate all tokens")
     public CommonResult<Boolean> enhancedLogout(
@@ -141,15 +175,14 @@ public class FirebaseAuthController {
 
         // Clear cookie
         AbstractCookieFactory cookieFactory =
-                new ZeroLifeRefreshTokenCookie(cookieConfig.isHttpOnly(), cookieConfig.isSecurity());
+                new ZeroLifeRefreshTokenCookie(
+                        cookieConfig.isHttpOnly(), cookieConfig.isSecurity());
         response.addCookie(cookieFactory.createCookie(null));
 
         return success(true);
     }
 
-    /**
-     * Extract Bearer token from Authorization header.
-     */
+    /** Extract Bearer token from Authorization header. */
     private String extractBearerToken(String authHeader) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             throw new RuntimeException("Missing or invalid Authorization header");
@@ -157,10 +190,9 @@ public class FirebaseAuthController {
         return authHeader.substring(7);
     }
 
-    /**
-     * Set refresh token cookie based on remember preference.
-     */
-    private void setCookies(HttpServletResponse response, LoginRespVO loginRespVO, boolean remember) {
+    /** Set refresh token cookie based on remember preference. */
+    private void setCookies(
+            HttpServletResponse response, LoginRespVO loginRespVO, boolean remember) {
         if (loginRespVO.getRefreshToken() != null) {
             AbstractCookieFactory cookieFactory;
             if (remember) {
@@ -178,9 +210,7 @@ public class FirebaseAuthController {
         }
     }
 
-    /**
-     * Extract client IP from request headers.
-     */
+    /** Extract client IP from request headers. */
     private String getClientIp(HttpServletRequest request) {
         String xff = request.getHeader("X-Forwarded-For");
         if (xff != null && !xff.isBlank()) {

@@ -4,16 +4,37 @@ spring:
     redis:
       host: ${PROD_REDIS_HOST}
       port: ${PROD_REDIS_PORT}
+      username: ${REDIS_USERNAME:default}
+      password: ${PROD_REDIS_PASSWORD}
   cloud:
     gateway:
       globalcors:
         add-to-simple-url-handler-mapping: true
         cors-configurations:
           '[/**]':
-            allowed-origin-patterns:
+            allowedOrigins:
+              - "https://chronoflow.site"
+              - "https://api.chronoflow.site"
+              - "https://www.chronoflow.site"
+              - "http://chronoflow.site"
+              - "http://api.chronoflow.site"
+              - "http://www.chronoflow.site"
               - "https://chronoflow-1.web.app"
               - "https://chronoflow-1.firebaseapp.com"
-            allowed-methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
-            allowed-headers: "*"
+            allowed-methods:
+              - "GET"
+              - "POST"
+              - "DELETE"
+              - "PATCH"
+              - "PUT"
+              - "OPTIONS"
+            allowed-headers:
+              - "Content-Type"
+              - "Authorization"
+              - "Accept"
+              - "Origin"
+              - "X-Requested-With"
+              - "Cache-Control"
+              - "Pragma"
             allow-credentials: true
-            max-age: 3600
+            max-age: 360000

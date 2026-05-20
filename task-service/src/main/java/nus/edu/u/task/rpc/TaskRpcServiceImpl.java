@@ -124,4 +124,23 @@ public class TaskRpcServiceImpl implements TaskRpcService {
                 .status(task.getStatus())
                 .build();
     }
+
+    @Override
+    public TaskDTO getTaskDetail(Long taskId) {
+        if (taskId == null) throw new IllegalArgumentException("taskId is required");
+
+        TaskDO task = taskMapper.selectById(taskId);
+        if (task == null) throw new IllegalArgumentException("Task not found: " + taskId);
+
+        TaskDTO dto = new TaskDTO();
+        dto.setId(task.getId());
+        dto.setEventId(task.getEventId());
+        dto.setName(task.getName());
+        dto.setDescription(task.getDescription());
+        dto.setStatus(task.getStatus());
+        dto.setRemark(task.getRemark());
+        dto.setStartTime(task.getStartTime());
+        dto.setEndTime(task.getEndTime());
+        return dto;
+    }
 }

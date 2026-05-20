@@ -3,16 +3,17 @@ kind: Deployment
 metadata:
   name: attendee-service
   namespace: chronoflow
+  # secretKeyRef Secrets (database, pub-sub, redis-auth) are synced from GCP SM by ExternalSecrets in k8s/external-secrets/.
   labels:
     app: attendee-service
     version: v1
 spec:
-  replicas: 2
+  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
+      maxSurge: 0
+      maxUnavailable: 1
   selector:
     matchLabels:
       app: attendee-service
@@ -28,7 +29,7 @@ spec:
           effect: "NoSchedule"
       containers:
         - name: attendee-service
-          image: e1241986/attendee-service:latest
+          image: asia-southeast1-docker.pkg.dev/chronoflow-1/attendee-service/attendee-service:latest
           imagePullPolicy: Always
           ports:
             - name: http
@@ -49,6 +50,62 @@ spec:
               value: "nacos"
             - name: NACOS_PASSWORD
               value: "nacos"
+            - name: PROD_MASTER_DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: database
+                  key: prod-master-db-host
+            - name: PROD_MASTER_DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: database
+                  key: prod-master-db-port
+            - name: PROD_MASTER_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: database
+                  key: prod-master-db-user
+            - name: PROD_MASTER_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: database
+                  key: prod-master-db-password
+            - name: PROD_SLAVE_DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: database
+                  key: prod-slave-db-host
+            - name: PROD_SLAVE_DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: database
+                  key: prod-slave-db-port
+            - name: PROD_SLAVE_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: database
+                  key: prod-slave-db-user
+            - name: PROD_SLAVE_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: database
+                  key: prod-slave-db-password
+            - name: PROD_REDIS_HOST
+              value: 10.122.0.3
+            - name: PROD_REDIS_PORT
+              value: "6379"
+            - name: PROD_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-auth
+                  key: password
+            # Spring Boot binds this directly to spring.data.redis.password (high precedence vs Nacos YAML).
+            # Use this so Redisson/Lock4j still AUTH when Nacos overrides spring.data.redis without a password.
+            - name: SPRING_DATA_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-auth
+                  key: password
             - name: PUB_SUB_SERVICE_ACCOUNT_JSON
               valueFrom:
                 secretKeyRef:

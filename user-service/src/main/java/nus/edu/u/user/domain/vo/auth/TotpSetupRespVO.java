@@ -6,9 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Response VO for TOTP setup - contains QR code and secret for authenticator app.
- */
+/** Response VO for TOTP setup - contains QR code and secret for authenticator app. */
 @Schema(description = "TOTP Setup Response VO")
 @Data
 @NoArgsConstructor

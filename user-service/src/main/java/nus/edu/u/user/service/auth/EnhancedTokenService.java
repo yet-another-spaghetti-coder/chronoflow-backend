@@ -12,8 +12,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 /**
- * Enhanced token service with rotation and reuse detection.
- * Implements token family tracking to detect refresh token reuse attacks.
+ * Enhanced token service with rotation and reuse detection. Implements token family tracking to
+ * detect refresh token reuse attacks.
  */
 @Service
 @RequiredArgsConstructor
@@ -51,7 +51,11 @@ public class EnhancedTokenService {
         // Track active token in family
         redisTemplate
                 .opsForValue()
-                .set(TOKEN_FAMILY_KEY + familyId, token, refreshTokenExpireSeconds, TimeUnit.SECONDS);
+                .set(
+                        TOKEN_FAMILY_KEY + familyId,
+                        token,
+                        refreshTokenExpireSeconds,
+                        TimeUnit.SECONDS);
 
         log.debug("Created refresh token for userId={} familyId={}", userId, familyId);
         return token;
@@ -116,7 +120,11 @@ public class EnhancedTokenService {
 
         redisTemplate
                 .opsForValue()
-                .set(TOKEN_FAMILY_KEY + familyId, newToken, refreshTokenExpireSeconds, TimeUnit.SECONDS);
+                .set(
+                        TOKEN_FAMILY_KEY + familyId,
+                        newToken,
+                        refreshTokenExpireSeconds,
+                        TimeUnit.SECONDS);
 
         log.debug("Rotated refresh token for userId={} familyId={}", userId, familyId);
         return RefreshResult.success(userId, familyId, newToken);

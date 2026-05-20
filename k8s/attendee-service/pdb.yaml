@@ -4,7 +4,7 @@ metadata:
   name: attendee-service-pdb
   namespace: chronoflow
 spec:
-  minAvailable: 1
+  minAvailable: 0
   selector:
     matchLabels:
       app: attendee-service

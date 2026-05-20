@@ -124,11 +124,15 @@ create table IF NOT EXISTS sys_user
         primary key,
     username    varchar(100)                 null,
     password    varchar(100)                 null,
+    salt        varchar(100)                 null comment 'Password salt',
     remark      varchar(200)                 null,
     email       varchar(200)                 null,
     phone       varchar(20)                  null,
     status      tinyint(1) default 0         not null comment '0 - Enable; 1 - Disable',
     login_time  datetime                     null comment 'The latest login datetime',
+    firebase_uid varchar(100)                null,
+    totp_secret  varchar(200)                null,
+    totp_enabled tinyint(1) default 0        null,
     dept_id     bigint                       null,
     post_list   json                         null,
     creator     varchar(100) charset utf8mb3 null,
@@ -178,6 +182,34 @@ CREATE TABLE IF NOT EXISTS sys_user_ott (
     used_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_ott_user FOREIGN KEY (user_id) REFERENCES sys_user(id)
+);
+
+CREATE TABLE IF NOT EXISTS audit_log (
+                             `id`           BIGINT NOT NULL primary key auto_increment ,
+                             `trace_id`     VARCHAR(64),
+                             `user_id`      BIGINT,
+                             `user_ip`      VARCHAR(45),
+                             `user_agent`   VARCHAR(512),
+                             `module`       VARCHAR(50),
+                             `operation`    VARCHAR(100),
+                             `type`         TINYINT,
+                             `method`       VARCHAR(10),
+                             `request_url`  VARCHAR(255),
+                             `request_body` TEXT,
+                             `target_type`  VARCHAR(50),
+                             `target_id`    VARCHAR(64),
+                             `before_data`  TEXT,
+                             `after_data`   TEXT,
+                             `result_code`  INT,
+                             `result_msg`   VARCHAR(512),
+                             `duration`     INT,
+                             `extra`        TEXT,
+                             creator     varchar(100)                 null,
+                             create_time datetime                     null,
+                             updater     varchar(100) charset utf8mb3 null,
+                             update_time datetime                     null,
+                             deleted     tinyint(1) default 0         null,
+                             tenant_id   bigint                       null
 );
 
 # Permissions

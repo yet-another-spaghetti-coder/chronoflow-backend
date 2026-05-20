@@ -3,6 +3,7 @@ package nus.edu.u.user.service.user;
 import static nus.edu.u.common.enums.ErrorCodeConstants.*;
 import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception;
 
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.jwt.JWT;
 import cn.hutool.jwt.JWTUtil;
@@ -29,7 +30,6 @@ import nus.edu.u.user.mapper.role.RolePermissionMapper;
 import nus.edu.u.user.mapper.tenant.TenantMapper;
 import nus.edu.u.user.mapper.user.UserMapper;
 import nus.edu.u.user.mapper.user.UserRoleMapper;
-import nus.edu.u.user.publisher.organizer.OrganizerNotificationPublisher;
 import nus.edu.u.user.service.auth.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -45,26 +45,19 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class RegServiceImpl implements RegService {
 
-    @Resource
-    private TenantMapper tenantMapper;
+    @Resource private TenantMapper tenantMapper;
 
-    @Resource
-    private UserMapper userMapper;
+    @Resource private UserMapper userMapper;
 
-    @Resource
-    private PermissionMapper permissionMapper;
+    @Resource private PermissionMapper permissionMapper;
 
-    @Resource
-    private RolePermissionMapper rolePermissionMapper;
+    @Resource private RolePermissionMapper rolePermissionMapper;
 
-    @Resource
-    private RoleMapper roleMapper;
+    @Resource private RoleMapper roleMapper;
 
-    @Resource
-    private UserRoleMapper userRoleMapper;
+    @Resource private UserRoleMapper userRoleMapper;
 
-    @Resource
-    private PasswordEncoder passwordEncoder;
+    @Resource private PasswordEncoder passwordEncoder;
     // private final OrganizerNotificationPublisher organizerNotificationPublisher;
 
     public static final String ORGANIZER_REMARK = "Organizer account";
@@ -80,10 +73,8 @@ public class RegServiceImpl implements RegService {
     public static final int ORGANIZATION_CODE_LENGTH = 10;
 
     public static final int MAX_RETRY_GENERATE_CODE = 5;
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private AuthService authService;
+    @Autowired private UserService userService;
+    @Autowired private AuthService authService;
 
     public RegSearchRespVO search(RegSearchReqVO regSearchReqVO) {
         // Select tenant
@@ -124,7 +115,9 @@ public class RegServiceImpl implements RegService {
             throw exception(ACCOUNT_EXIST);
         }
         user.setUsername(regMemberReqVO.getUsername());
-        user.setPassword(passwordEncoder.encode(regMemberReqVO.getPassword()));
+        String salt = IdUtil.fastSimpleUUID();
+        user.setSalt(salt);
+        user.setPassword(passwordEncoder.encode(regMemberReqVO.getPassword() + salt));
         user.setPhone(regMemberReqVO.getPhone());
         user.setStatus(UserStatusEnum.ENABLE.getCode());
 
@@ -151,12 +144,15 @@ public class RegServiceImpl implements RegService {
             throw exception(REG_FAIL);
         }
         // Create and insert user
+        String salt = IdUtil.fastSimpleUUID();
         UserDO user =
                 UserDO.builder()
                         .username(regOrganizerReqVO.getUsername())
                         .email(regOrganizerReqVO.getUserEmail())
                         .phone(regOrganizerReqVO.getMobile())
-                        .password(passwordEncoder.encode(regOrganizerReqVO.getUserPassword()))
+                        .salt(salt)
+                        .password(
+                                passwordEncoder.encode(regOrganizerReqVO.getUserPassword() + salt))
                         .remark(ORGANIZER_REMARK)
                         .status(UserStatusEnum.ENABLE.getCode())
                         .build();
@@ -255,16 +251,17 @@ public class RegServiceImpl implements RegService {
         JWT jwtToken = JWTUtil.parseToken(ssoRegOrganizerReqVO.getJwtToken());
         String email = jwtToken.getPayload("email").toString();
         String name = jwtToken.getPayload("name").toString();
-        RegOrganizerReqVO regOrganizerReqVO = RegOrganizerReqVO.builder()
-                .name(name)
-                .username(email)
-                .userEmail(email)
-                .mobile(ssoRegOrganizerReqVO.getMobile())
-                .organizationName(ssoRegOrganizerReqVO.getOrganizationName())
-                .organizationAddress(ssoRegOrganizerReqVO.getOrganizationAddress())
-                .organizationCode(ssoRegOrganizerReqVO.getOrganizationCode())
-                .userPassword("Pass@123")
-                .build();
+        RegOrganizerReqVO regOrganizerReqVO =
+                RegOrganizerReqVO.builder()
+                        .name(name)
+                        .username(email)
+                        .userEmail(email)
+                        .mobile(ssoRegOrganizerReqVO.getMobile())
+                        .organizationName(ssoRegOrganizerReqVO.getOrganizationName())
+                        .organizationAddress(ssoRegOrganizerReqVO.getOrganizationAddress())
+                        .organizationCode(ssoRegOrganizerReqVO.getOrganizationCode())
+                        .userPassword("Pass@123")
+                        .build();
         return this.registerAsOrganizer(regOrganizerReqVO);
     }
 }

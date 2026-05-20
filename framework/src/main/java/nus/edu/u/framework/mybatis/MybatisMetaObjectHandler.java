@@ -35,7 +35,8 @@ public class MybatisMetaObjectHandler implements MetaObjectHandler {
                 // Skip auto-fill if tenant filter is bypassed (e.g., during Firebase registration)
                 // The caller is responsible for setting tenant_id explicitly in this case
                 if (!isTenantFilterBypassed()) {
-                    this.strictInsertFill(metaObject, "tenant_id", Long.class, getCurrentTenantId());
+                    this.strictInsertFill(
+                            metaObject, "tenant_id", Long.class, getCurrentTenantId());
                 }
             }
         }

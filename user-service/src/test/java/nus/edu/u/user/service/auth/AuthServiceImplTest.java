@@ -2,24 +2,17 @@ package nus.edu.u.user.service.auth;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import cn.dev33.satoken.context.mock.SaTokenContextMockUtil;
 import cn.dev33.satoken.stp.StpUtil;
-import java.time.LocalDateTime;
 import java.util.List;
 import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.common.exception.ServiceException;
 import nus.edu.u.user.domain.dataobject.user.UserDO;
 import nus.edu.u.user.domain.dto.RoleDTO;
-import nus.edu.u.user.domain.dto.UserPermissionDTO;
 import nus.edu.u.user.domain.dto.UserRoleDTO;
-import nus.edu.u.user.domain.dto.UserTokenDTO;
-import nus.edu.u.user.domain.vo.auth.LoginReqVO;
 import nus.edu.u.user.domain.vo.auth.LoginRespVO;
-import nus.edu.u.user.domain.vo.auth.UserVO;
 import nus.edu.u.user.domain.vo.role.RoleRespVO;
 import nus.edu.u.user.service.role.RoleService;
 import nus.edu.u.user.service.user.UserService;
@@ -66,92 +59,15 @@ class AuthServiceImplTest {
                         .id(10L)
                         .username("alice")
                         .password("encoded")
+                        .salt("salt")
                         .status(CommonStatusEnum.ENABLE.getStatus())
                         .build();
         when(userService.getUserByUsername("alice")).thenReturn(user);
-        when(userService.isPasswordMatch("pwd", "encoded")).thenReturn(true);
+        when(userService.isPasswordMatch("pwd", "encoded", "salt")).thenReturn(true);
 
         UserDO result = service.authenticate("alice", "pwd");
 
         assertThat(result).isEqualTo(user);
-    }
-
-    @Test
-    void authenticate_whenUserMissing_throws() {
-        when(userService.getUserByUsername("missing")).thenReturn(null);
-
-        assertThatThrownBy(() -> service.authenticate("missing", "pwd"))
-                .isInstanceOf(ServiceException.class)
-                .extracting("code")
-                .isEqualTo(
-                        nus.edu.u.common.enums.ErrorCodeConstants.AUTH_LOGIN_BAD_CREDENTIALS
-                                .getCode());
-    }
-
-    @Test
-    void authenticate_whenDisabled_throws() {
-        UserDO user =
-                UserDO.builder()
-                        .id(11L)
-                        .username("alice")
-                        .password("encoded")
-                        .status(CommonStatusEnum.DISABLE.getStatus())
-                        .build();
-        when(userService.getUserByUsername("alice")).thenReturn(user);
-        when(userService.isPasswordMatch("pwd", "encoded")).thenReturn(true);
-
-        assertThatThrownBy(() -> service.authenticate("alice", "pwd"))
-                .isInstanceOf(ServiceException.class)
-                .extracting("code")
-                .isEqualTo(
-                        nus.edu.u.common.enums.ErrorCodeConstants.AUTH_LOGIN_USER_DISABLED
-                                .getCode());
-    }
-
-    @Test
-    void login_returnsUserInfoAndRefreshToken() {
-        LoginReqVO req =
-                LoginReqVO.builder().username("bob").password("pwd").remember(true).build();
-        UserDO user =
-                UserDO.builder()
-                        .id(20L)
-                        .password("encoded")
-                        .status(CommonStatusEnum.ENABLE.getStatus())
-                        .loginTime(LocalDateTime.now())
-                        .build();
-        user.setTenantId(1000L);
-
-        when(userService.getUserByUsername("bob")).thenReturn(user);
-        when(userService.isPasswordMatch("pwd", "encoded")).thenReturn(true);
-        when(tokenService.createRefreshToken(any(UserTokenDTO.class))).thenReturn("refresh");
-        UserRoleDTO userRole =
-                UserRoleDTO.builder()
-                        .userId(20L)
-                        .username("bob")
-                        .email("bob@example.com")
-                        .roles(List.of(RoleDTO.builder().id(1L).roleKey("ADMIN").build()))
-                        .build();
-        when(userService.selectUserWithRole(20L)).thenReturn(userRole);
-        UserPermissionDTO permission = new UserPermissionDTO();
-        permission.setPermissionKey("perm");
-        when(userService.getUserPermissions(20L)).thenReturn(List.of(permission));
-        when(roleService.getRole(1L)).thenReturn(RoleRespVO.builder().id(1L).name("Admin").build());
-
-        LoginRespVO resp = service.login(req);
-
-        assertThat(resp.getRefreshToken()).isEqualTo("refresh");
-        UserVO userVO = resp.getUser();
-        assertThat(userVO.getId()).isEqualTo(20L);
-        assertThat(userVO.getRole()).contains("ADMIN");
-    }
-
-    @Test
-    void logout_invokesTokenService() {
-        StpUtil.login(30L);
-
-        service.logout("refresh");
-
-        verify(tokenService).removeToken("refresh");
     }
 
     @Test

@@ -31,6 +31,11 @@
             <optional>true</optional>
         </dependency>
 
+        <dependency>
+            <groupId>nus.edu.u</groupId>
+            <artifactId>common</artifactId>
+        </dependency>
+
     </dependencies>
 
 </project>

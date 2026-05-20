@@ -11,7 +11,7 @@ import nus.edu.u.enums.push.PushStatus;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@EqualsAndHashCode(callSuper=false)
+@EqualsAndHashCode(callSuper = false)
 @Table(name = "push_message")
 public class PushMessageDO extends BaseNotificationEntity {
 

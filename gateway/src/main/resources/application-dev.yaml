@@ -5,6 +5,7 @@ spring:
       host: ${DEV_REDIS_HOST}
       port: ${DEV_REDIS_PORT}
       database: ${DEV_REDIS_DATABASE}
+      username: ${REDIS_USERNAME:default}
       # password: ${DEV_REDIS_PASSWORD}
   cloud:
     gateway:
@@ -12,10 +13,23 @@ spring:
         add-to-simple-url-handler-mapping: true
         cors-configurations:
           '[/**]':
-            allowed-origin-patterns:
-              - "http://localhost:*"
-              - "http://127.0.0.1:*"
-            allowed-methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
-            allowed-headers: "*"
+            allowedOrigins:
+              - "http://localhost:5173"
+            allowed-origin-patterns: "*"
+            allowed-methods:
+              - "GET"
+              - "POST"
+              - "DELETE"
+              - "PATCH"
+              - "PUT"
+              - "OPTIONS"
+            allowed-headers:
+              - "Content-Type"
+              - "Authorization"
+              - "Accept"
+              - "Origin"
+              - "X-Requested-With"
+              - "Cache-Control"
+              - "Pragma"
             allow-credentials: true
-            max-age: 3600
+            max-age: 360000

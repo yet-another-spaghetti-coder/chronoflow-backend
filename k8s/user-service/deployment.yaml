@@ -3,16 +3,17 @@ kind: Deployment
 metadata:
   name: user-service
   namespace: chronoflow
+  # secretKeyRef Secrets (database, pub-sub, firebase, redis-auth) are synced from GCP SM by ExternalSecrets in k8s/external-secrets/.
   labels:
     app: user-service
     version: v1
 spec:
-  replicas: 2
+  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
+      maxSurge: 0
+      maxUnavailable: 1
   selector:
     matchLabels:
       app: user-service
@@ -28,13 +29,68 @@ spec:
           effect: "NoSchedule"
       containers:
         - name: user-service
-          image: e1241986/user-service:latest
+          image: asia-southeast1-docker.pkg.dev/chronoflow-1/user-service/user-service:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
               containerPort: 8081
               protocol: TCP
           env:
+            - name: PROD_MASTER_DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: database
+                  key: prod-master-db-host
+            - name: PROD_MASTER_DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: database
+                  key: prod-master-db-port
+            - name: PROD_MASTER_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: database
+                  key: prod-master-db-user
+            - name: PROD_MASTER_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: database
+                  key: prod-master-db-password
+            - name: PROD_SLAVE_DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: database
+                  key: prod-slave-db-host
+            - name: PROD_SLAVE_DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: database
+                  key: prod-slave-db-port
+            - name: PROD_SLAVE_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: database
+                  key: prod-slave-db-user
+            - name: PROD_SLAVE_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: database
+                  key: prod-slave-db-password
+            - name: PROD_REDIS_HOST
+              value: "10.122.0.3"
+            - name: PROD_REDIS_PORT
+              value: "6379"
+            - name: PROD_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-auth
+                  key: password
+            # Spring Boot binds this directly to spring.data.redis.password (high precedence vs Nacos YAML).
+            - name: SPRING_DATA_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-auth
+                  key: password
             - name: SPRING_PROFILES_ACTIVE
               value: "prod"
             - name: JAVA_OPTS
@@ -59,6 +115,18 @@ spec:
                 configMapKeyRef:
                   name: noti-config
                   key: gcp.project.id
+            - name: FIREBASE_SERVICE_ACCOUNT_JSON
+              valueFrom:
+                secretKeyRef:
+                  name: firebase-auth
+                  key: account-json
+            - name: MOBILE_SSO_JWKS
+              value: https://www.googleapis.com/oauth2/v3/certs
+            - name: MOBILE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: firebase
+                  key: mobile-client-id
           resources:
             requests:
               memory: "512Mi"
