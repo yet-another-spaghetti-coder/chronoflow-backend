@@ -155,4 +155,22 @@ logging:
     reactor.netty: INFO
     com.chronoflow: DEBUG
 
+############## WebSocket security (PLS 03 CSWH/auth) ##############
+chronoflow:
+  websocket:
+    handshake:
+      # Exact-match browser origins permitted on the WS upgrade. Empty = reject all (fail-closed).
+      # Comma-separated env value is auto-split by Spring (e.g. WS_ALLOWED_ORIGINS=a,b,c).
+      # Dev: http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173
+      # Prod: https://<frontend-domain>
+      allowed-origins: ${WS_ALLOWED_ORIGINS:}
+    jwt:
+      issuer: chronoflow
+      audience: chronoflow-ws
+      purpose: websocket-auth
+      ttl-seconds: 60
+      # Must be set via env / Secret Manager (>= 32 chars). No default in source.
+      secret: ${WS_JWT_SECRET:}
+      clock-skew-seconds: 5
+
 

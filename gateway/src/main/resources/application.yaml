@@ -134,6 +134,13 @@ knife4j:
         service-name: notification-service
         url: /notifications/v3/api-docs
 
+chronoflow:
+  security:
+    csp:
+      # WebSocket endpoint added to CSP connect-src. Prod: wss://<backend-host>.
+      # Dev (with browser-side localhost WS): ws://localhost:8087. Never use ws:// in prod.
+      connect-src-ws: ${CHRONOFLOW_WSS_URL:}
+
 gateway:
   white-list:
     - /actuator/health/**
