@@ -1,5 +1,6 @@
 package nus.edu.u.gateway.filter;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -14,6 +15,15 @@ import reactor.core.publisher.Mono;
  */
 @Component
 public class SecurityHeadersFilter implements GlobalFilter, Ordered {
+
+    /**
+     * Production WebSocket endpoint (wss://...) to add to CSP {@code connect-src}.
+     * Empty default = no wss source added (no WS connections permitted by CSP).
+     * Set via env / Nacos: {@code CHRONOFLOW_WSS_URL=wss://api.example.com}.
+     * Dev profile may set {@code ws://localhost:8087}; do not allow {@code ws:} in prod.
+     */
+    @Value("${chronoflow.security.csp.connect-src-ws:}")
+    private String connectSrcWs;
 
     @Override
     public int getOrder() {
@@ -52,6 +62,14 @@ public class SecurityHeadersFilter implements GlobalFilter, Ordered {
 
     /** Build Content Security Policy header. Allows Firebase and Google auth domains. */
     private String buildCsp() {
+        StringBuilder connectSrc =
+                new StringBuilder(
+                        "connect-src 'self' https://*.googleapis.com https://*.firebaseapp.com"
+                            + " https://identitytoolkit.googleapis.com"
+                            + " https://securetoken.googleapis.com");
+        if (connectSrcWs != null && !connectSrcWs.isBlank()) {
+            connectSrc.append(' ').append(connectSrcWs.trim());
+        }
         return String.join(
                 "; ",
                 "default-src 'self'",
@@ -59,7 +77,7 @@ public class SecurityHeadersFilter implements GlobalFilter, Ordered {
                 "style-src 'self' 'unsafe-inline'",
                 "img-src 'self' data: https:",
                 "font-src 'self' https://fonts.gstatic.com",
-                "connect-src 'self' https://*.googleapis.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com",
+                connectSrc.toString(),
                 "frame-src https://*.firebaseapp.com https://accounts.google.com",
                 "base-uri 'self'",
                 "form-action 'self'");

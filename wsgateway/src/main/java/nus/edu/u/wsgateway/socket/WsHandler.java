@@ -47,6 +47,12 @@ public class WsHandler implements WebSocketHandler {
     /** Reject AUTH frames larger than this to bound parse cost on unauthenticated input. */
     private static final int MAX_AUTH_FRAME_CHARS = 4096;
 
+    /**
+     * Bound parse cost for authenticated inbound. Below the 64KB WebSocket frame cap, but
+     * still defensive against an authenticated session that starts misbehaving.
+     */
+    private static final int MAX_POST_AUTH_FRAME_CHARS = 8192;
+
     private static final CloseStatus AUTH_REQUIRED =
             new CloseStatus(CloseStatus.POLICY_VIOLATION.getCode(), "AUTH_REQUIRED");
     private static final CloseStatus AUTH_FAILED =
@@ -179,9 +185,18 @@ public class WsHandler implements WebSocketHandler {
     }
 
     /**
-     * Post-auth inbound handling. Phase 5 will tighten this into a strict allow-list; for now keep
-     * legacy literal "ping" working and add the JSON {"type":"PING"} -> {"type":"PONG",ts}
-     * heartbeat to fix the FE/BE format mismatch the gap analysis flagged.
+     * Post-auth inbound handling (PLS 03: WS input validation).
+     *
+     * <p>Strict allow-list of inbound shapes after AUTH:
+     *
+     * <ul>
+     *   <li>Literal text {@code "ping"} (legacy, kept until clients migrate) -> {@code "pong"}
+     *   <li>JSON {@code {"type":"PING","ts":...}} -> {@code {"type":"PONG","ts":...}}
+     * </ul>
+     *
+     * Anything else is silently dropped — never echoed, never logged above debug, never
+     * interpreted as application data. WS messages are signals to the FE; payloads are fetched
+     * out-of-band over authenticated HTTP, so dropping unknown inbound has no functional cost.
      */
     private void handlePostAuth(
             WebSocketSession session, String userId, WebSocketMessage msg) {
@@ -189,7 +204,7 @@ public class WsHandler implements WebSocketHandler {
             return;
         }
         String text = msg.getPayloadAsText();
-        if (text == null || text.isEmpty()) {
+        if (text == null || text.isEmpty() || text.length() > MAX_POST_AUTH_FRAME_CHARS) {
             return;
         }
         if ("ping".equalsIgnoreCase(text)) {
