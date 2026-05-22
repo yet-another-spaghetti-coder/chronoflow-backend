@@ -42,10 +42,8 @@ class WsJwtServiceTest {
 
     @Test
     void mint_rejectsBlankUserId() {
-        assertThatThrownBy(() -> service.mint(""))
-                .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> service.mint(null))
-                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> service.mint("")).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> service.mint(null)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -123,7 +121,9 @@ class WsJwtServiceTest {
         WsJwtService.Minted minted = service.mint("u-1");
         String[] parts = minted.token().split("\\.");
         byte[] decoded = Base64.getUrlDecoder().decode(parts[1]);
-        String json = new String(decoded, StandardCharsets.UTF_8).replace("\"sub\":\"u-1\"", "\"sub\":\"u-attacker\"");
+        String json =
+                new String(decoded, StandardCharsets.UTF_8)
+                        .replace("\"sub\":\"u-1\"", "\"sub\":\"u-attacker\"");
         String tamperedPayload =
                 Base64.getUrlEncoder()
                         .withoutPadding()

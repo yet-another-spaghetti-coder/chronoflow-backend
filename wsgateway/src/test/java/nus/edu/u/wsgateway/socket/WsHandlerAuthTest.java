@@ -94,8 +94,7 @@ class WsHandlerAuthTest {
 
     @Test
     void tryAuth_nonTextFrame_returnsNull() {
-        WebSocketMessage binary =
-                new WebSocketMessage(Type.BINARY, BUF.wrap(new byte[] {1, 2, 3}));
+        WebSocketMessage binary = new WebSocketMessage(Type.BINARY, BUF.wrap(new byte[] {1, 2, 3}));
         assertThat(handler.tryAuth(binary)).isNull();
     }
 
@@ -150,7 +149,6 @@ class WsHandlerAuthTest {
     }
 
     private static WebSocketMessage textMessage(String text) {
-        return new WebSocketMessage(
-                Type.TEXT, BUF.wrap(text.getBytes(StandardCharsets.UTF_8)));
+        return new WebSocketMessage(Type.TEXT, BUF.wrap(text.getBytes(StandardCharsets.UTF_8)));
     }
 }

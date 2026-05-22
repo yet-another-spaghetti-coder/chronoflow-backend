@@ -48,8 +48,7 @@ public class FeedController {
                 .createOrTouchAndPush(req)
                 .map(
                         doc -> {
-                            String status =
-                                    (doc.getDeliveredAt() != null) ? "DELIVERED" : "QUEUED";
+                            String status = (doc.getDeliveredAt() != null) ? "DELIVERED" : "QUEUED";
                             Map<String, Object> body = new HashMap<>();
                             body.put("status", status);
                             if (doc.getId() != null) body.put("id", doc.getId());
@@ -71,7 +70,11 @@ public class FeedController {
             @RequestParam(name = "limit", defaultValue = "20") int limit,
             @RequestParam(name = "beforeEpochMs", required = false) Long beforeEpochMs) {
         String userId = currentUserOrReject("/ws/feed", requestedUserId);
-        log.info("Fetching notification feed userId={} limit={} before={}", userId, limit, beforeEpochMs);
+        log.info(
+                "Fetching notification feed userId={} limit={} before={}",
+                userId,
+                limit,
+                beforeEpochMs);
         Instant before = (beforeEpochMs == null) ? null : Instant.ofEpochMilli(beforeEpochMs);
         return feedService.page(userId, limit, before);
     }
@@ -96,9 +99,9 @@ public class FeedController {
     }
 
     /**
-     * Resolve the authenticated user and reject if the caller tried to act on behalf of a
-     * different user. Logs the attempt at WARN since this is a sign of either a buggy client or
-     * an active BOLA probe.
+     * Resolve the authenticated user and reject if the caller tried to act on behalf of a different
+     * user. Logs the attempt at WARN since this is a sign of either a buggy client or an active
+     * BOLA probe.
      */
     private static String currentUserOrReject(String endpoint, String requestedUserId) {
         StpUtil.checkLogin();
