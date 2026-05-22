@@ -77,8 +77,8 @@ jobs:
           [ "${{ steps.filter.outputs.wsgateway }}"              = "true" ] && SERVICES+=("wsgateway")
       
           if [ ${#SERVICES[@]} -eq 0 ]; then
-            echo "No service-specific changes detected."
-            echo "services=[]" >> "$GITHUB_OUTPUT"
+            echo "No service-specific changes detected. Building all services."
+            echo 'services=${{ steps.set-services.outputs.all }}' >> "$GITHUB_OUTPUT"
           else
             SERVICES_JSON=$(printf '%s\n' "${SERVICES[@]}" | jq -Rsc '[split("\n")[] | select(length > 0)]')
             echo "services=${SERVICES_JSON}" >> "$GITHUB_OUTPUT"
@@ -88,7 +88,6 @@ jobs:
     name: Build & JUnit & Lint- ${{ matrix.service }}
     runs-on: ubuntu-latest
     needs: detect-changes
-    if: needs.detect-changes.outputs.services != '[]'
     strategy:
       matrix:
         service: ${{ fromJson(needs.detect-changes.outputs.services) }}
@@ -130,7 +129,6 @@ jobs:
         service: ${{ fromJson(needs.detect-changes.outputs.services) }}
       fail-fast: false
     needs: [ detect-changes, build-and-test ]
-    if: needs.detect-changes.outputs.services != '[]'
 
     env:
       SBOM_FILE: ${{ matrix.service }}-sbom.spdx.json
@@ -185,7 +183,6 @@ jobs:
     runs-on: ubuntu-latest
     environment: dev
     needs: [detect-changes, build-and-test]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/dev' && github.repository_owner == 'yet-another-spaghetti-coder'
     strategy:
       matrix:
         service: ${{ fromJson(needs.detect-changes.outputs.services) }}
@@ -240,7 +237,6 @@ jobs:
     runs-on: ubuntu-latest
     environment: dev
     needs: detect-changes
-    if: github.event_name == 'push'
     steps:
       - name: Git checkout
         uses: actions/checkout@v6
