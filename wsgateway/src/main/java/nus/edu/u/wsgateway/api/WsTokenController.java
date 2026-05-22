@@ -1,10 +1,13 @@
 package nus.edu.u.wsgateway.api;
 
+import cn.dev33.satoken.reactor.context.SaReactorHolder;
 import cn.dev33.satoken.stp.StpUtil;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.wsgateway.security.WsJwtService;
+import nus.edu.u.wsgateway.security.WsTokenGuard;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,19 +31,27 @@ import reactor.core.publisher.Mono;
 public class WsTokenController {
 
     private final WsJwtService jwtService;
+    private final WsTokenGuard tokenGuard;
 
     @PostMapping("/token")
     public Mono<ResponseEntity<Map<String, Object>>> issueToken() {
-        StpUtil.checkLogin();
-        String userId = StpUtil.getLoginIdAsString();
-        WsJwtService.Minted minted = jwtService.mint(userId);
-        log.debug(
-                "[WS] minted WS JWT userId={} jti={} exp={}",
-                userId,
-                minted.jti(),
-                minted.expEpochSeconds());
-        return Mono.just(
-                ResponseEntity.ok(
-                        Map.of("token", minted.token(), "exp", minted.expEpochSeconds())));
+        return SaReactorHolder.sync(
+                () -> {
+                    StpUtil.checkLogin();
+                    String userId = StpUtil.getLoginIdAsString();
+                    if (!tokenGuard.allowMint(userId)) {
+                        log.warn("[WS] token mint rate limited userId={}", userId);
+                        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                                .body(Map.<String, Object>of("error", "rate_limited"));
+                    }
+                    WsJwtService.Minted minted = jwtService.mint(userId);
+                    log.debug(
+                            "[WS] minted WS JWT userId={} jti={} exp={}",
+                            userId,
+                            minted.jti(),
+                            minted.expEpochSeconds());
+                    return ResponseEntity.ok(
+                            Map.of("token", minted.token(), "exp", minted.expEpochSeconds()));
+                });
     }
 }

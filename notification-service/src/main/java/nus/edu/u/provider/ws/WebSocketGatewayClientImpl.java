@@ -52,6 +52,7 @@ public class WebSocketGatewayClientImpl implements WebSocketGatewayClient {
                         .baseUrl(props.getBaseUrl())
                         .clientConnector(new ReactorClientHttpConnector(http))
                         .defaultHeader("X-Source-Service", appName)
+                        .defaultHeader("X-Internal-Service-Token", props.getInternalServiceToken())
                         .filter(errorFilter())
                         .build();
     }

@@ -91,20 +91,9 @@ spec:
                   name: database
                   key: prod-slave-db-password
             - name: PROD_REDIS_HOST
-              value: "10.122.0.3"
+              value: "redis"
             - name: PROD_REDIS_PORT
               value: "6379"
-            - name: PROD_REDIS_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: redis-auth
-                  key: password
-            # Spring Boot binds this directly to spring.data.redis.password (high precedence vs Nacos YAML).
-            - name: SPRING_DATA_REDIS_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: redis-auth
-                  key: password
             - name: GCP_SERVICE_ACCOUNT_JSON
               valueFrom:
                 secretKeyRef:
@@ -123,7 +112,7 @@ spec:
             - name: FIREBASE_SERVICE_ACCOUNT_JSON
               valueFrom:
                 secretKeyRef:
-                  name: firebase
+                  name: firebase-from-gcp-sm
                   key: account-json
             - name: AWS_REGION
               valueFrom:
@@ -142,6 +131,11 @@ spec:
                   key: access-key
             - name: WS_URL
               value: http://wsgateway.chronoflow.svc.cluster.local:8087
+            - name: WS_INTERNAL_SERVICE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: wsgateway-secrets
+                  key: internal-service-token
           resources:
             requests:
               memory: "512Mi"

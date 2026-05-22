@@ -1,20 +1,17 @@
 package nus.edu.u.gateway.filter;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.gateway.filter.GatewayFilterChain;
-import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebFilter;
+import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
-/**
- * Global filter to add security headers to all responses. Implements OWASP recommended security
- * headers.
- */
+/** WebFlux filter to add OWASP recommended security headers to all responses. */
 @Component
-public class SecurityHeadersFilter implements GlobalFilter, Ordered {
+public class SecurityHeadersFilter implements WebFilter, Ordered {
 
     /**
      * Production WebSocket endpoint (wss://...) to add to CSP {@code connect-src}. Empty default =
@@ -32,32 +29,24 @@ public class SecurityHeadersFilter implements GlobalFilter, Ordered {
     }
 
     @Override
-    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        // Add security headers BEFORE the chain executes
-        HttpHeaders headers = exchange.getResponse().getHeaders();
-
-        // HTTP Strict Transport Security
-        headers.add("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
-
-        // Prevent MIME type sniffing
-        headers.add("X-Content-Type-Options", "nosniff");
-
-        // Prevent clickjacking
-        headers.add("X-Frame-Options", "DENY");
-
-        // Control referrer information
-        headers.add("Referrer-Policy", "strict-origin-when-cross-origin");
-
-        // Content Security Policy
-        headers.add("Content-Security-Policy", buildCsp());
-
-        // XSS Protection (legacy but still useful)
-        headers.add("X-XSS-Protection", "1; mode=block");
-
-        // Permissions Policy (formerly Feature-Policy)
-        headers.add("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
-
+    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+        exchange.getResponse()
+                .beforeCommit(
+                        () -> {
+                            addSecurityHeaders(exchange.getResponse().getHeaders());
+                            return Mono.empty();
+                        });
         return chain.filter(exchange);
+    }
+
+    private void addSecurityHeaders(HttpHeaders headers) {
+        headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+        headers.set("X-Content-Type-Options", "nosniff");
+        headers.set("X-Frame-Options", "DENY");
+        headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+        headers.set("Content-Security-Policy", buildCsp());
+        headers.set("X-XSS-Protection", "1; mode=block");
+        headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
     }
 
     /** Build Content Security Policy header. Allows Firebase and Google auth domains. */

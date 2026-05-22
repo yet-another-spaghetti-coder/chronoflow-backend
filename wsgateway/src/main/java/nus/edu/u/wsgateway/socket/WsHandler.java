@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.wsgateway.runtime.LocalConnectionRegistry;
 import nus.edu.u.wsgateway.security.WsHandshakeProperties;
 import nus.edu.u.wsgateway.security.WsJwtService;
+import nus.edu.u.wsgateway.security.WsTokenGuard;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.socket.CloseStatus;
@@ -64,6 +65,7 @@ public class WsHandler implements WebSocketHandler {
     private final WsJwtService jwtService;
     private final WsHandshakeProperties handshakeProps;
     private final ObjectMapper mapper;
+    private final WsTokenGuard tokenGuard;
 
     @Override
     public Mono<Void> handle(WebSocketSession session) {
@@ -167,6 +169,10 @@ public class WsHandler implements WebSocketHandler {
             }
             String token = node.path("token").asText("");
             WsJwtService.VerifiedClaims claims = jwtService.verify(token);
+            if (!tokenGuard.consumeJti(claims.userId(), claims.jti(), claims.expEpochSeconds())) {
+                log.debug("[WS] AUTH replay rejected userId={}", claims.userId());
+                return null;
+            }
             return claims.userId();
         } catch (WsJwtService.JwtVerificationException e) {
             log.debug("[WS] AUTH verify failed reason={}", e.getMessage());

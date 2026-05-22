@@ -30,7 +30,7 @@ spec:
           effect: "NoSchedule"
       containers:
         - name: wsgateway
-          image: shchow/wsgateway:latest
+          image: asia-southeast1-docker.pkg.dev/chronoflow-1/wsgateway/wsgateway@sha256:4d7bcd52bddbaa1a0bdf56bf4f537065b772890adf5ca8397b72e2a234046077
           imagePullPolicy: Always
           ports:
             - name: http
@@ -56,6 +56,22 @@ spec:
                 secretKeyRef:
                   name: mongodb
                   key: uri
+            - name: SPRING_DATA_REDIS_HOST
+              value: "redis"
+            - name: SPRING_DATA_REDIS_PORT
+              value: "6379"
+            - name: WS_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: wsgateway-secrets
+                  key: ws-jwt-secret
+            - name: WS_ALLOWED_ORIGINS
+              value: "https://chronoflow.site,https://chronoflow-frontend-production.up.railway.app"
+            - name: WS_INTERNAL_SERVICE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: wsgateway-secrets
+                  key: internal-service-token
             - name: PUB_SUB_SERVICE_ACCOUNT_JSON
               valueFrom:
                 secretKeyRef:
@@ -69,7 +85,7 @@ spec:
             - name: FIREBASE_SERVICE_ACCOUNT_JSON
               valueFrom:
                 secretKeyRef:
-                  name: firebase
+                  name: firebase-from-gcp-sm
                   key: account-json
           resources:
             requests:

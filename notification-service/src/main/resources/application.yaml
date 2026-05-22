@@ -214,6 +214,7 @@ notification:
   ws:
     enabled: true
     base-url: ${WS_URL}
+    internal-service-token: ${WS_INTERNAL_SERVICE_TOKEN:}
     rate-key: "rate:ws:global"
     rate-limit: 400
     rate-window: 1m
