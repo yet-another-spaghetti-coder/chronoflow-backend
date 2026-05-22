@@ -17,10 +17,10 @@ import reactor.core.publisher.Mono;
 public class SecurityHeadersFilter implements GlobalFilter, Ordered {
 
     /**
-     * Production WebSocket endpoint (wss://...) to add to CSP {@code connect-src}.
-     * Empty default = no wss source added (no WS connections permitted by CSP).
-     * Set via env / Nacos: {@code CHRONOFLOW_WSS_URL=wss://api.example.com}.
-     * Dev profile may set {@code ws://localhost:8087}; do not allow {@code ws:} in prod.
+     * Production WebSocket endpoint (wss://...) to add to CSP {@code connect-src}. Empty default =
+     * no wss source added (no WS connections permitted by CSP). Set via env / Nacos: {@code
+     * CHRONOFLOW_WSS_URL=wss://api.example.com}. Dev profile may set {@code ws://localhost:8087};
+     * do not allow {@code ws:} in prod.
      */
     @Value("${chronoflow.security.csp.connect-src-ws:}")
     private String connectSrcWs;
@@ -65,8 +65,8 @@ public class SecurityHeadersFilter implements GlobalFilter, Ordered {
         StringBuilder connectSrc =
                 new StringBuilder(
                         "connect-src 'self' https://*.googleapis.com https://*.firebaseapp.com"
-                            + " https://identitytoolkit.googleapis.com"
-                            + " https://securetoken.googleapis.com");
+                                + " https://identitytoolkit.googleapis.com"
+                                + " https://securetoken.googleapis.com");
         if (connectSrcWs != null && !connectSrcWs.isBlank()) {
             connectSrc.append(' ').append(connectSrcWs.trim());
         }

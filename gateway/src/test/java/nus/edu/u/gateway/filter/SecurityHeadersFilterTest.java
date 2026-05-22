@@ -61,15 +61,13 @@ class SecurityHeadersFilterTest {
         runFilter(filter, exchange);
         HttpHeaders headers = exchange.getResponse().getHeaders();
 
-        assertThat(headers.getFirst("Strict-Transport-Security"))
-                .contains("max-age=31536000");
+        assertThat(headers.getFirst("Strict-Transport-Security")).contains("max-age=31536000");
         assertThat(headers.getFirst("X-Content-Type-Options")).isEqualTo("nosniff");
         assertThat(headers.getFirst("X-Frame-Options")).isEqualTo("DENY");
         assertThat(headers.getFirst("Referrer-Policy"))
                 .isEqualTo("strict-origin-when-cross-origin");
         assertThat(headers.getFirst("X-XSS-Protection")).isEqualTo("1; mode=block");
-        assertThat(headers.getFirst("Permissions-Policy"))
-                .contains("camera=()");
+        assertThat(headers.getFirst("Permissions-Policy")).contains("camera=()");
     }
 
     private static String applyAndReadCsp(SecurityHeadersFilter filter) {
@@ -84,8 +82,7 @@ class SecurityHeadersFilterTest {
         return MockServerWebExchange.from(MockServerHttpRequest.get("/health"));
     }
 
-    private static void runFilter(
-            SecurityHeadersFilter filter, MockServerWebExchange exchange) {
+    private static void runFilter(SecurityHeadersFilter filter, MockServerWebExchange exchange) {
         GatewayFilterChain chain = mock(GatewayFilterChain.class);
         when(chain.filter(any())).thenReturn(Mono.empty());
         filter.filter(exchange, chain).block();
