@@ -184,11 +184,19 @@ public class FirebaseAuthServiceImpl implements FirebaseAuthService {
             String expectedFingerprint = generateFingerprint(userAgent, clientIp);
             String storedFingerprint = tokenService.getFingerprint(currentToken);
             if (storedFingerprint != null && !expectedFingerprint.equals(storedFingerprint)) {
+                // F-4 / C-03: enforce, not just log. Mismatch is treated as token theft —
+                // revoke the entire family, drop the fingerprint, force logout, audit, reject
+                // the refresh with EXPIRED_LOGIN_CREDENTIALS so the client is bounced to login.
+                String userIdStr = StpUtil.getLoginIdAsString();
                 auditLogger.log(
                         SecurityEvent.TOKEN_FINGERPRINT_MISMATCH,
-                        StpUtil.getLoginIdAsString(),
+                        userIdStr,
                         clientIp,
-                        "Fingerprint mismatch");
+                        "Refresh rejected — fingerprint mismatch");
+                tokenService.removeTokenAndFamily(oldRefreshToken);
+                tokenService.removeFingerprint(currentToken);
+                StpUtil.logout();
+                throw exception(EXPIRED_LOGIN_CREDENTIALS);
             }
             return buildLoginResponse(StpUtil.getLoginIdAsLong(), oldRefreshToken);
         }

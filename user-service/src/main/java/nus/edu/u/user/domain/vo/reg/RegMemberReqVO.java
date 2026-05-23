@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import nus.edu.u.common.annotation.Mobile;
+import nus.edu.u.common.annotation.StrongPassword;
 
 /**
  * Register request VO
@@ -27,7 +28,7 @@ public class RegMemberReqVO {
     private String username;
 
     @NotEmpty(message = "Please enter your password")
-    @Size(min = 8, max = 100, message = "Password must be between 8 and 100 characters")
+    @StrongPassword
     private String password;
 
     @NotEmpty(message = "Please enter your phone number")

@@ -35,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.framework.security.audit.SecurityAuditLogger;
 import nus.edu.u.framework.security.audit.SecurityAuditLogger.SecurityEvent;
+import nus.edu.u.framework.security.lockout.LoginAttemptCounter;
 import nus.edu.u.user.domain.dataobject.user.UserDO;
 import nus.edu.u.user.domain.dto.RoleDTO;
 import nus.edu.u.user.domain.dto.UserPermissionDTO;
@@ -78,21 +79,30 @@ public class AuthServiceImpl implements AuthService {
 
     @Resource private SecurityAuditLogger auditLogger;
 
+    @Resource private LoginAttemptCounter loginAttemptCounter;
+
     @Override
     public UserDO authenticate(String username, String password) {
+        // F-3 / C-02: lockout pre-check. Reject before BCrypt even fires so a locked account
+        // is not constant-time-distinguishable by hashing latency.
+        if (loginAttemptCounter.isLocked(username)) {
+            auditLogger.log(
+                    SecurityEvent.LOGIN_FAILED_BAD_CREDENTIALS,
+                    null,
+                    null,
+                    "Account locked: " + username);
+            throw exception(AUTH_ACCOUNT_LOCKED);
+        }
+
         // 1.Check username first
         UserDO userDO = userService.getUserByUsername(username);
         if (userDO == null) {
-            auditLogger.log(SecurityEvent.LOGIN_FAILED_BAD_CREDENTIALS, null, null, username);
+            handleFailedLogin(null, username);
             throw exception(AUTH_LOGIN_BAD_CREDENTIALS);
         }
         // 2.Check password
         if (!userService.isPasswordMatch(password, userDO.getPassword(), userDO.getSalt())) {
-            auditLogger.log(
-                    SecurityEvent.LOGIN_FAILED_BAD_CREDENTIALS,
-                    userDO.getId().toString(),
-                    null,
-                    username);
+            handleFailedLogin(userDO.getId().toString(), username);
             throw exception(AUTH_LOGIN_BAD_CREDENTIALS);
         }
         // 3.Check if user is disabled
@@ -104,7 +114,23 @@ public class AuthServiceImpl implements AuthService {
                     username);
             throw exception(AUTH_LOGIN_USER_DISABLED);
         }
+
+        // Successful credential check — clear any prior failure counter.
+        loginAttemptCounter.recordSuccess(username);
         return userDO;
+    }
+
+    private void handleFailedLogin(String userId, String username) {
+        auditLogger.log(SecurityEvent.LOGIN_FAILED_BAD_CREDENTIALS, userId, null, username);
+        boolean justLocked = loginAttemptCounter.recordFailure(username);
+        if (justLocked) {
+            // Emit a distinct audit signal the first time the lock trips so admins can correlate.
+            auditLogger.log(
+                    SecurityEvent.LOGIN_FAILED_BAD_CREDENTIALS,
+                    userId,
+                    null,
+                    "Account auto-locked after consecutive failures: " + username);
+        }
     }
 
     public UserDO authenticate(String username) {

@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nus.edu.u.common.annotation.StrongPassword;
 
 @Data
 @NoArgsConstructor
@@ -15,7 +16,7 @@ public class UpdateProfileReqVO {
     @Size(min = 4, max = 32, message = "Username length must be 4~32")
     private String username;
 
-    @Size(min = 8, max = 128, message = "Password length must be 8~128")
+    @StrongPassword
     private String password;
 
     @Email(message = "Email format invalid")

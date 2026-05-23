@@ -137,4 +137,22 @@ public interface UserService {
      * @param userId User ID
      */
     void disableTotp(Long userId);
+
+    /**
+     * Update the persisted password and salt for a user. Called by the password reset flow.
+     *
+     * @param userId User ID
+     * @param encodedPassword BCrypt-encoded password (already includes the salt in the input)
+     * @param salt Fresh salt to store alongside the new hash
+     */
+    void updatePassword(Long userId, String encodedPassword, String salt);
+
+    /**
+     * Look up a non-deleted user by email without applying the tenant filter. Safe to call from
+     * unauthenticated flows such as password reset.
+     *
+     * @param email Email address (case-insensitive)
+     * @return UserDO or null if not found
+     */
+    UserDO getUserByEmailWithoutTenant(String email);
 }

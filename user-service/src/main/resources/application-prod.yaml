@@ -4,11 +4,15 @@ spring:
       web-stat-filter:
         enabled: true
       stat-view-servlet:
+        # F-1: Druid console credentials MUST come from the environment in prod. The yaml no
+        # longer ships a default password. If DRUID_USER / DRUID_PASSWORD are absent the
+        # Spring placeholder resolution fails at startup — the desired safe behaviour
+        # (fail closed rather than ship with a guessable default).
         enabled: true
         allow:
         url-pattern: /druid/*
-        login-username: lushuwen
-        login-password: lushuwen
+        login-username: ${DRUID_USER}
+        login-password: ${DRUID_PASSWORD}
       filter:
         stat:
           enabled: true

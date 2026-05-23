@@ -8,8 +8,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import nus.edu.u.common.core.domain.CommonResult;
+import nus.edu.u.framework.security.audit.SecurityAuditLogger;
+import nus.edu.u.framework.security.ratelimit.RateLimiter;
 import nus.edu.u.user.config.CookieConfig;
 import nus.edu.u.user.domain.vo.auth.LoginReqVO;
 import nus.edu.u.user.domain.vo.auth.LoginRespVO;
@@ -28,7 +31,10 @@ import org.springframework.test.util.ReflectionTestUtils;
 class AuthControllerTest {
 
     @Mock private AuthService authService;
+    @Mock private HttpServletRequest request;
     @Mock private HttpServletResponse response;
+    @Mock private RateLimiter rateLimiter;
+    @Mock private SecurityAuditLogger auditLogger;
 
     @Spy private CookieConfig cookieConfig = new CookieConfig();
 
@@ -39,6 +45,9 @@ class AuthControllerTest {
         cookieConfig.setHttpOnly(true);
         cookieConfig.setSecurity(false);
         ReflectionTestUtils.setField(controller, "cookieConfig", cookieConfig);
+        // F-2: tests pre-date the rate limiter; default to "allow" so the existing assertions
+        // about cookie behaviour still hold.
+        when(rateLimiter.isAllowed(any(), any())).thenReturn(true);
     }
 
     @Test
@@ -49,7 +58,8 @@ class AuthControllerTest {
         resp.setRefreshToken("new-refresh");
         when(authService.login(any(LoginReqVO.class))).thenReturn(resp);
 
-        CommonResult<LoginRespVO> result = controller.login(req, "old-refresh", response);
+        CommonResult<LoginRespVO> result =
+                controller.login(req, "old-refresh", request, response);
 
         assertThat(result.getData()).isSameAs(resp);
         assertThat(req.getRefreshToken()).isEqualTo("old-refresh");
@@ -77,7 +87,7 @@ class AuthControllerTest {
         resp.setRefreshToken("token");
         when(authService.login(any(LoginReqVO.class))).thenReturn(resp);
 
-        controller.login(req, null, response);
+        controller.login(req, null, request, response);
 
         ArgumentCaptor<Cookie> cookieCaptor = ArgumentCaptor.forClass(Cookie.class);
         verify(response).addCookie(cookieCaptor.capture());

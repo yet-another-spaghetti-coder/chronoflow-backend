@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import nus.edu.u.common.annotation.Mobile;
+import nus.edu.u.common.annotation.StrongPassword;
 
 /**
  * @author Lu Shuwen
@@ -28,7 +29,7 @@ public class RegOrganizerReqVO {
     private String username;
 
     @NotEmpty(message = "Password is required")
-    @Size(min = 8, max = 100, message = "Password must be between 8 and 100 characters")
+    @StrongPassword
     private String userPassword;
 
     @NotEmpty(message = "Email is required")

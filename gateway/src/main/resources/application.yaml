@@ -154,6 +154,8 @@ gateway:
     - /users/auth/firebase-register
     - /users/auth/firebase-refresh
     - /users/auth/totp/verify
+    - /users/auth/forgot-password
+    - /users/auth/reset-password
     - /users/reg/**
     - /ws
     - /ws/internal/**

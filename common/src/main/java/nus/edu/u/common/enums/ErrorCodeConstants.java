@@ -29,6 +29,20 @@ public interface ErrorCodeConstants {
     ErrorCode REFRESH_TOKEN_REUSE_DETECTED =
             new ErrorCode(
                     10_01_009, "Security alert: Refresh token reuse detected. Please log in again");
+    ErrorCode PASSWORD_RESET_TOKEN_INVALID =
+            new ErrorCode(10_01_010, "Invalid or expired password reset token");
+    ErrorCode PASSWORD_RESET_EMAIL_BLANK = new ErrorCode(10_01_011, "Email is required");
+    ErrorCode PASSWORD_RESET_PASSWORD_WEAK =
+            new ErrorCode(
+                    10_01_012,
+                    "New password does not meet complexity requirements (min 8 characters)");
+    ErrorCode PASSWORD_RESET_USER_DISABLED =
+            new ErrorCode(10_01_013, "Cannot reset password for a disabled account");
+    ErrorCode PASSWORD_POLICY_VIOLATION = new ErrorCode(10_01_014, "Password policy violation");
+    ErrorCode AUTH_ACCOUNT_LOCKED =
+            new ErrorCode(
+                    10_01_015,
+                    "Too many failed login attempts. Account temporarily locked. Try again later");
 
     // ========= user crud module 12-01-000 ============
     ErrorCode USERNAME_EXIST = new ErrorCode(12_01_001, "Username already exists");

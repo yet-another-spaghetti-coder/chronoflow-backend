@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nus.edu.u.common.annotation.StrongPassword;
 
 @Data
 @NoArgsConstructor
@@ -18,7 +19,7 @@ public class CreateProfileReqVO {
     private String username;
 
     @NotBlank(message = "Password cannot be blank")
-    @Size(min = 8, max = 128, message = "Password length must be 8~128")
+    @StrongPassword
     private String password;
 
     @NotBlank(message = "Email cannot be blank")

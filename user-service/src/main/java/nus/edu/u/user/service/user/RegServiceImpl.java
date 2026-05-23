@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.common.constant.PermissionConstants;
 import nus.edu.u.common.enums.CommonStatusEnum;
+import nus.edu.u.framework.security.password.PasswordPolicyService;
 import nus.edu.u.shared.rpc.notification.dto.organizer.RegOrganizerReqDTO;
 import nus.edu.u.user.domain.dataobject.permission.PermissionDO;
 import nus.edu.u.user.domain.dataobject.role.RoleDO;
@@ -75,6 +76,7 @@ public class RegServiceImpl implements RegService {
     public static final int MAX_RETRY_GENERATE_CODE = 5;
     @Autowired private UserService userService;
     @Autowired private AuthService authService;
+    @Autowired private PasswordPolicyService passwordPolicyService;
 
     public RegSearchRespVO search(RegSearchReqVO regSearchReqVO) {
         // Select tenant
@@ -115,6 +117,9 @@ public class RegServiceImpl implements RegService {
             throw exception(ACCOUNT_EXIST);
         }
         user.setUsername(regMemberReqVO.getUsername());
+        // SR-A-07 cross-field policy: reject password equal to or containing username/email.
+        passwordPolicyService.assertNotIdentity(
+                regMemberReqVO.getPassword(), regMemberReqVO.getUsername(), user.getEmail());
         String salt = IdUtil.fastSimpleUUID();
         user.setSalt(salt);
         user.setPassword(passwordEncoder.encode(regMemberReqVO.getPassword() + salt));
@@ -132,6 +137,11 @@ public class RegServiceImpl implements RegService {
         if (!ObjUtil.isEmpty(checkUserDO)) {
             throw exception(ACCOUNT_EXIST);
         }
+        // SR-A-07 cross-field policy: reject password equal to or containing username/email.
+        passwordPolicyService.assertNotIdentity(
+                regOrganizerReqVO.getUserPassword(),
+                regOrganizerReqVO.getUsername(),
+                regOrganizerReqVO.getUserEmail());
         TenantDO tenant =
                 TenantDO.builder()
                         .name(regOrganizerReqVO.getOrganizationName())

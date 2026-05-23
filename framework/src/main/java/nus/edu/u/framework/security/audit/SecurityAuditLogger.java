@@ -50,7 +50,8 @@ public class SecurityAuditLogger {
                     SecurityEvent.TOKEN_FINGERPRINT_MISMATCH,
                     SecurityEvent.REFRESH_TOKEN_REUSE_DETECTED,
                     SecurityEvent.PERMISSION_DENIED,
-                    SecurityEvent.RATE_LIMIT_EXCEEDED);
+                    SecurityEvent.RATE_LIMIT_EXCEEDED,
+                    SecurityEvent.PASSWORD_RESET_TOKEN_INVALID);
 
     /** Security events to track. */
     public enum SecurityEvent {
@@ -77,7 +78,12 @@ public class SecurityAuditLogger {
         PERMISSION_DENIED,
 
         // Rate limiting events
-        RATE_LIMIT_EXCEEDED
+        RATE_LIMIT_EXCEEDED,
+
+        // Password reset events
+        PASSWORD_RESET_REQUESTED,
+        PASSWORD_RESET_COMPLETED,
+        PASSWORD_RESET_TOKEN_INVALID
     }
 
     /**

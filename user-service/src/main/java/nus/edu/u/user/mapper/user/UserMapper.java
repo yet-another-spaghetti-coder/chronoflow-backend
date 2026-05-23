@@ -103,6 +103,33 @@ public interface UserMapper extends BaseMapper<UserDO> {
     @InterceptorIgnore(tenantLine = "true")
     Integer updateByIdWithoutTenant(UserDO userDO);
 
+    /**
+     * Look up a non-deleted user by email, bypassing the tenant filter. Used by unauthenticated
+     * flows (e.g. password reset) where no Sa-Token session exists yet.
+     *
+     * <p>Uses {@link com.baomidou.mybatisplus.core.toolkit.InterceptorIgnoreHelper} because the
+     * {@code @InterceptorIgnore} annotation on a default method does not propagate to the inner
+     * {@code selectOne} proxy invocation.
+     */
+    default UserDO selectByEmailWithoutTenant(String email) {
+        if (email == null || email.isBlank()) {
+            return null;
+        }
+        com.baomidou.mybatisplus.core.plugins.InterceptorIgnoreHelper.handle(
+                com.baomidou.mybatisplus.core.plugins.IgnoreStrategy.builder()
+                        .tenantLine(true)
+                        .build());
+        try {
+            return this.selectOne(
+                    Wrappers.<UserDO>lambdaQuery()
+                            .eq(UserDO::getEmail, email.trim().toLowerCase())
+                            .eq(UserDO::getDeleted, 0)
+                            .last("LIMIT 1"));
+        } finally {
+            com.baomidou.mybatisplus.core.plugins.InterceptorIgnoreHelper.clearIgnoreStrategy();
+        }
+    }
+
     default UserProfileDTO fromVo(UserProfileRespVO vo) {
         if (vo == null) {
             return null;

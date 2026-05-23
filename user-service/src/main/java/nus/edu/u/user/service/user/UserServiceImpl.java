@@ -766,4 +766,30 @@ public class UserServiceImpl implements UserService {
         userMapper.update(null, wrapper);
         log.info("TOTP disabled for userId={}", userId);
     }
+
+    @Override
+    public void updatePassword(Long userId, String encodedPassword, String salt) {
+        // Called by the password reset flow, which is unauthenticated — no Sa-Token session
+        // exists, so the tenant interceptor must be bypassed for this UPDATE statement.
+        com.baomidou.mybatisplus.core.plugins.InterceptorIgnoreHelper.handle(
+                com.baomidou.mybatisplus.core.plugins.IgnoreStrategy.builder()
+                        .tenantLine(true)
+                        .build());
+        try {
+            LambdaUpdateWrapper<UserDO> wrapper =
+                    Wrappers.lambdaUpdate(UserDO.class)
+                            .eq(UserDO::getId, userId)
+                            .set(UserDO::getPassword, encodedPassword)
+                            .set(UserDO::getSalt, salt);
+            userMapper.update(null, wrapper);
+        } finally {
+            com.baomidou.mybatisplus.core.plugins.InterceptorIgnoreHelper.clearIgnoreStrategy();
+        }
+        log.info("Password updated for userId={}", userId);
+    }
+
+    @Override
+    public UserDO getUserByEmailWithoutTenant(String email) {
+        return userMapper.selectByEmailWithoutTenant(email);
+    }
 }

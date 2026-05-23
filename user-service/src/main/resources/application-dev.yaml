@@ -4,11 +4,14 @@ spring:
       web-stat-filter:
         enabled: true
       stat-view-servlet:
+        # F-1: Druid stat servlet enabled in dev for ops visibility; credentials sourced from env.
+        # Dev fallback keeps the historical "lushuwen / lushuwen" so the existing developer
+        # workflow keeps working until a real DRUID_USER / DRUID_PASSWORD is set in .env.
         enabled: true
         allow:
         url-pattern: /druid/*
-        login-username: lushuwen
-        login-password: lushuwen
+        login-username: ${DRUID_USER:lushuwen}
+        login-password: ${DRUID_PASSWORD:lushuwen}
       filter:
         stat:
           enabled: true
@@ -61,3 +64,11 @@ logging:
   level:
     nus.edu.u: debug
     org.springframework: warn
+
+# F-8: dev profile speaks HTTP at http://localhost:5173 — browsers drop Secure cookies over
+# plain HTTP, so the auth round-trip silently breaks. Explicitly override the default (which
+# stays true for prod). application-prod.yaml does NOT carry this key.
+chronoflow:
+  cookie:
+    security: false
+

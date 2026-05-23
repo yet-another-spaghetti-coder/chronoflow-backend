@@ -2,6 +2,8 @@ package nus.edu.u.framework.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nus.edu.u.framework.security.audit.SecurityAuditLogger;
+import nus.edu.u.framework.security.lockout.LoginAttemptCounter;
+import nus.edu.u.framework.security.password.PasswordPolicyService;
 import nus.edu.u.framework.security.ratelimit.RateLimiter;
 import nus.edu.u.framework.security.satoken.StpPermissionHandler;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -32,5 +34,17 @@ public class SecurityAutoConfiguration {
     @ConditionalOnMissingBean
     public RateLimiter rateLimiter(StringRedisTemplate redisTemplate) {
         return new RateLimiter(redisTemplate);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public PasswordPolicyService passwordPolicyService() {
+        return new PasswordPolicyService();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public LoginAttemptCounter loginAttemptCounter(StringRedisTemplate redisTemplate) {
+        return new LoginAttemptCounter(redisTemplate);
     }
 }

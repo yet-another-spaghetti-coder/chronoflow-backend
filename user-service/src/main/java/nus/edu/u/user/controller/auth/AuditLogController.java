@@ -2,6 +2,7 @@ package nus.edu.u.user.controller.auth;
 
 import static nus.edu.u.common.core.domain.CommonResult.success;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
@@ -17,28 +18,35 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Audit-log read API. Locked to the ADMIN role at the class level (F-6 / C-08). Audit history
+ * contains other users' login IPs, failure reasons, and security events — explicitly out of scope
+ * for ordinary authenticated callers. A {@code NotRoleException} from Sa-Token is translated by
+ * {@code GlobalExceptionHandler} into a 403 response, with no record list returned.
+ */
 @Tag(name = "Audit Log Controller")
 @RestController
 @RequestMapping("/users/audit-logs")
 @Validated
+@SaCheckRole("ADMIN")
 public class AuditLogController {
 
     @Resource private AuditLogService auditLogService;
 
     @GetMapping
-    @Operation(summary = "Get paginated audit logs with filters")
+    @Operation(summary = "Get paginated audit logs with filters (admin only)")
     public CommonResult<PageResult<AuditLogRespVO>> getAuditLogs(AuditLogQueryReqVO reqVO) {
         return success(auditLogService.getAuditLogPage(reqVO));
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get audit log by ID")
+    @Operation(summary = "Get audit log by ID (admin only)")
     public CommonResult<AuditLogRespVO> getAuditLog(@PathVariable Long id) {
         return success(auditLogService.getAuditLog(id));
     }
 
     @GetMapping("/user/{userId}")
-    @Operation(summary = "Get audit logs for a specific user")
+    @Operation(summary = "Get audit logs for a specific user (admin only)")
     public CommonResult<PageResult<AuditLogRespVO>> getAuditLogsByUser(
             @PathVariable Long userId,
             @RequestParam(defaultValue = "1") Integer pageNo,
