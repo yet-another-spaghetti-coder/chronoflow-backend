@@ -19,9 +19,13 @@ spec:
       app: wsgateway
   template:
     metadata:
+      annotations:
+        sidecar.istio.io/inject: "true"
+        traffic.sidecar.istio.io/excludeOutboundPorts: "8848,9848"
       labels:
         app: wsgateway
         version: v1
+        sidecar.istio.io/inject: "true"
     spec:
       serviceAccountName: wsgateway-sa
       tolerations:
@@ -35,6 +39,9 @@ spec:
           ports:
             - name: http
               containerPort: 8087
+              protocol: TCP
+            - name: dubbo
+              containerPort: 50053
               protocol: TCP
           env:
             - name: SPRING_PROFILES_ACTIVE
@@ -51,6 +58,10 @@ spec:
               value: "nacos"
             - name: NACOS_PASSWORD
               value: "nacos"
+            - name: DUBBO_IP_TO_REGISTRY
+              value: wsgateway.chronoflow.svc.cluster.local
+            - name: DUBBO_PORT_TO_REGISTRY
+              value: "50053"
             - name: MONGODB_URI
               valueFrom:
                 secretKeyRef:
@@ -60,6 +71,11 @@ spec:
               value: "redis"
             - name: SPRING_DATA_REDIS_PORT
               value: "6379"
+            - name: SPRING_DATA_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-auth
+                  key: password
             - name: WS_JWT_SECRET
               valueFrom:
                 secretKeyRef:

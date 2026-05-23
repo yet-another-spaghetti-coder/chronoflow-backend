@@ -12,5 +12,9 @@ spec:
       targetPort: 8082
       protocol: TCP
       name: http
+    - port: 50055
+      targetPort: 50055
+      protocol: TCP
+      name: dubbo
   selector:
     app: event-service

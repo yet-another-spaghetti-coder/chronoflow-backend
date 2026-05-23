@@ -12,5 +12,9 @@ spec:
       targetPort: 8085
       protocol: TCP
       name: http
+    - port: 50054
+      targetPort: 50054
+      protocol: TCP
+      name: dubbo
   selector:
     app: file-service

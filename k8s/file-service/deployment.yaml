@@ -19,10 +19,15 @@ spec:
       app: file-service
   template:
     metadata:
+      annotations:
+        sidecar.istio.io/inject: "true"
+        traffic.sidecar.istio.io/excludeOutboundPorts: "8848,9848"
       labels:
         app: file-service
         version: v1
+        sidecar.istio.io/inject: "true"
     spec:
+      serviceAccountName: file-service-sa
       tolerations:
         - key: "node.gke.io/balloon-pod-resize"
           operator: "Exists"
@@ -34,6 +39,9 @@ spec:
           ports:
             - name: http
               containerPort: 8085
+              protocol: TCP
+            - name: dubbo
+              containerPort: 50054
               protocol: TCP
           env:
             - name: SPRING_PROFILES_ACTIVE
@@ -50,6 +58,10 @@ spec:
               value: "nacos"
             - name: NACOS_PASSWORD
               value: "nacos"
+            - name: DUBBO_IP_TO_REGISTRY
+              value: file-service.chronoflow.svc.cluster.local
+            - name: DUBBO_PORT_TO_REGISTRY
+              value: "50054"
             - name: PROD_MASTER_DB_HOST
               valueFrom:
                 secretKeyRef:
@@ -91,7 +103,7 @@ spec:
                   name: database
                   key: prod-slave-db-password
             - name: PROD_REDIS_HOST
-              value: "10.122.0.3"
+              value: "redis"
             - name: PROD_REDIS_PORT
               value: "6379"
             - name: PROD_REDIS_PASSWORD
@@ -121,7 +133,7 @@ spec:
             httpGet:
               path: /actuator/health/liveness
               port: 8085
-            initialDelaySeconds: 240
+            initialDelaySeconds: 420
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
@@ -129,7 +141,7 @@ spec:
             httpGet:
               path: /actuator/health/readiness
               port: 8085
-            initialDelaySeconds: 240
+            initialDelaySeconds: 420
             periodSeconds: 5
             timeoutSeconds: 3
             failureThreshold: 3

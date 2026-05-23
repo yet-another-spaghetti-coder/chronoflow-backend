@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.spring.pubsub.core.PubSubTemplate;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.shared.rpc.notification.dto.common.NotificationRequestDTO;
@@ -40,9 +41,10 @@ public class NotificationPublisher {
             put(attrs, "userId", req.getUserId());
             put(attrs, "to", req.getTo());
 
-            String messageId = String.valueOf(pubSubTemplate.publish(TOPIC_NAME, payload, attrs));
+            String messageId =
+                    pubSubTemplate.publish(TOPIC_NAME, payload, attrs).get(10, TimeUnit.SECONDS);
             log.info(
-                    "📤 Published Notification to topic={} msgId={} eventId={} channel={} type={}",
+                    "📤 Published Notification accepted topic={} msgId={} eventId={} channel={} type={}",
                     TOPIC_NAME,
                     messageId,
                     req.getEventId(),
@@ -50,10 +52,20 @@ public class NotificationPublisher {
                     req.getType());
 
             return messageId;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error(
+                    "Interrupted while publishing notification eventId={} channel={} type={}",
+                    req.getEventId(),
+                    req.getChannel(),
+                    req.getType(),
+                    e);
+            throw new RuntimeException("Pub/Sub publish interrupted", e);
         } catch (Exception e) {
             log.error(
-                    " Failed to publish notification eventId={} type={}",
+                    "Failed to publish notification eventId={} channel={} type={}",
                     req.getEventId(),
+                    req.getChannel(),
                     req.getType(),
                     e);
             throw new RuntimeException("Pub/Sub publish failed", e);

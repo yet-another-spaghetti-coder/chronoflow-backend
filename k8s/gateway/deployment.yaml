@@ -19,10 +19,15 @@ spec:
       app: gateway
   template:
     metadata:
+      annotations:
+        sidecar.istio.io/inject: "true"
+        traffic.sidecar.istio.io/excludeOutboundPorts: "8848,9848"
       labels:
         app: gateway
         version: v1
+        sidecar.istio.io/inject: "true"
     spec:
+      serviceAccountName: gateway-sa
       tolerations:
         - key: "node.gke.io/balloon-pod-resize"
           operator: "Exists"
@@ -56,6 +61,11 @@ spec:
               value: "6379"
             - name: SPRING_DATA_REDIS_USERNAME
               value: "default"
+            - name: SPRING_DATA_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-auth
+                  key: password
             - name: CHRONOFLOW_WSS_URL
               value: "wss://api.chronoflow.site"
           resources:

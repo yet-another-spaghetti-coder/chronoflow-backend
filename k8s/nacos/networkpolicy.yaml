@@ -1,0 +1,46 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: nacos-allow-chronoflow-apps
+  namespace: chronoflow
+  labels:
+    app: nacos
+spec:
+  podSelector:
+    matchLabels:
+      app: nacos
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - gateway
+                  - user-service
+                  - event-service
+                  - task-service
+                  - attendee-service
+                  - file-service
+                  - notification-service
+                  - wsgateway
+      ports:
+        - protocol: TCP
+          port: 8848
+        - protocol: TCP
+          port: 9848
+    - from:
+        - podSelector:
+            matchLabels:
+              app: nacos
+      ports:
+        - protocol: TCP
+          port: 7848
+        - protocol: TCP
+          port: 8848
+        - protocol: TCP
+          port: 9848
+        - protocol: TCP
+          port: 9849
