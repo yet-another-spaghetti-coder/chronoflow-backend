@@ -81,3 +81,17 @@ spec:
       app: notification-service
   mtls:
     mode: STRICT
+---
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: wsgateway-strict-mtls
+  namespace: chronoflow
+  labels:
+    app: wsgateway
+spec:
+  selector:
+    matchLabels:
+      app: wsgateway
+  mtls:
+    mode: STRICT

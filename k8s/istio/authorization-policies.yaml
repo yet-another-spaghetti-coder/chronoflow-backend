@@ -1,0 +1,186 @@
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: user-service-allow-required-callers
+  namespace: chronoflow
+  labels:
+    app: user-service
+    security-control: zero-trust
+spec:
+  selector:
+    matchLabels:
+      app: user-service
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - cluster.local/ns/chronoflow/sa/gateway-sa
+              - cluster.local/ns/chronoflow/sa/event-service-sa
+              - cluster.local/ns/chronoflow/sa/task-service-sa
+              - cluster.local/ns/chronoflow/sa/attendee-service-sa
+              - cluster.local/ns/chronoflow/sa/notification-service-sa
+    - to:
+        - operation:
+            paths:
+              - /actuator/health
+              - /actuator/health/*
+              - /actuator/prometheus
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: event-service-allow-required-callers
+  namespace: chronoflow
+  labels:
+    app: event-service
+    security-control: zero-trust
+spec:
+  selector:
+    matchLabels:
+      app: event-service
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - cluster.local/ns/chronoflow/sa/gateway-sa
+              - cluster.local/ns/chronoflow/sa/task-service-sa
+              - cluster.local/ns/chronoflow/sa/attendee-service-sa
+              - cluster.local/ns/chronoflow/sa/notification-service-sa
+    - to:
+        - operation:
+            paths:
+              - /actuator/health
+              - /actuator/health/*
+              - /actuator/prometheus
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: task-service-allow-required-callers
+  namespace: chronoflow
+  labels:
+    app: task-service
+    security-control: zero-trust
+spec:
+  selector:
+    matchLabels:
+      app: task-service
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - cluster.local/ns/chronoflow/sa/gateway-sa
+              - cluster.local/ns/chronoflow/sa/event-service-sa
+              - cluster.local/ns/chronoflow/sa/notification-service-sa
+    - to:
+        - operation:
+            paths:
+              - /actuator/health
+              - /actuator/health/*
+              - /actuator/prometheus
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: attendee-service-allow-required-callers
+  namespace: chronoflow
+  labels:
+    app: attendee-service
+    security-control: zero-trust
+spec:
+  selector:
+    matchLabels:
+      app: attendee-service
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - cluster.local/ns/chronoflow/sa/gateway-sa
+    - to:
+        - operation:
+            paths:
+              - /actuator/health
+              - /actuator/health/*
+              - /actuator/prometheus
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: file-service-allow-required-callers
+  namespace: chronoflow
+  labels:
+    app: file-service
+    security-control: zero-trust
+spec:
+  selector:
+    matchLabels:
+      app: file-service
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - cluster.local/ns/chronoflow/sa/gateway-sa
+              - cluster.local/ns/chronoflow/sa/task-service-sa
+    - to:
+        - operation:
+            paths:
+              - /actuator/health
+              - /actuator/health/*
+              - /actuator/prometheus
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: notification-service-allow-required-callers
+  namespace: chronoflow
+  labels:
+    app: notification-service
+    security-control: zero-trust
+spec:
+  selector:
+    matchLabels:
+      app: notification-service
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - cluster.local/ns/chronoflow/sa/gateway-sa
+              - cluster.local/ns/chronoflow/sa/task-service-sa
+    - to:
+        - operation:
+            paths:
+              - /actuator/health
+              - /actuator/health/*
+              - /actuator/prometheus
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: wsgateway-allow-required-callers
+  namespace: chronoflow
+  labels:
+    app: wsgateway
+    security-control: zero-trust
+spec:
+  selector:
+    matchLabels:
+      app: wsgateway
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - cluster.local/ns/chronoflow/sa/gateway-sa
+              - cluster.local/ns/chronoflow/sa/notification-service-sa
+    - to:
+        - operation:
+            paths:
+              - /actuator/health
+              - /actuator/health/*
+              - /actuator/prometheus

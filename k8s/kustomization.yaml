@@ -22,6 +22,7 @@ resources:
   - external-secrets/external-secret-mongodb.yaml
   - istio/serviceaccounts.yaml
   - istio/user-service-strict-mtls.yaml
+  - istio/authorization-policies.yaml
   - nacos/deployment.yaml
   - nacos/networkpolicy.yaml
 
