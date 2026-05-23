@@ -30,7 +30,7 @@ spec:
           effect: "NoSchedule"
       containers:
         - name: wsgateway
-          image: asia-southeast1-docker.pkg.dev/chronoflow-1/wsgateway/wsgateway@sha256:4d7bcd52bddbaa1a0bdf56bf4f537065b772890adf5ca8397b72e2a234046077
+          image: asia-southeast1-docker.pkg.dev/chronoflow-1/wsgateway/wsgateway@sha256:c82f6b06f0f0fc766e28fdac6046d130a27c9be256bff7ba9fcce96c7abc0b48
           imagePullPolicy: Always
           ports:
             - name: http

@@ -35,6 +35,16 @@ public class NotificationDeviceDO extends BaseNotificationEntity {
     @Column(name = "device_id", length = 128, nullable = false)
     private String deviceId;
 
+    @Lob
+    @Column(name = "push_public_key")
+    private String pushPublicKey;
+
+    @Column(name = "push_key_alg", length = 64)
+    private String pushKeyAlg;
+
+    @Column(name = "push_key_version", length = 64)
+    private String pushKeyVersion;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 16, nullable = false)
     @Builder.Default

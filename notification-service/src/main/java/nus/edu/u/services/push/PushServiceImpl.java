@@ -2,6 +2,7 @@ package nus.edu.u.services.push;
 
 import com.google.firebase.messaging.FirebaseMessagingException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import nus.edu.u.domain.dataObject.push.PushMessageDO;
 import nus.edu.u.domain.dto.push.PushRequestDTO;
 import nus.edu.u.enums.common.NotificationChannel;
 import nus.edu.u.enums.common.NotificationStatus;
+import nus.edu.u.enums.push.PushPlatform;
 import nus.edu.u.enums.push.PushStatus;
 import nus.edu.u.exception.RateLimitExceededException;
 import nus.edu.u.provider.push.PushClient;
@@ -33,6 +35,7 @@ public class PushServiceImpl implements PushService {
     private final PushLimitPropertiesConfig props;
     private final PushClient pushClient;
     private final DeviceRegistryService deviceRegistry;
+    private final PushPayloadEncryptor pushPayloadEncryptor;
 
     // -----------------
     // 1) Fan-out to all active devices of a user
@@ -48,14 +51,57 @@ public class PushServiceImpl implements PushService {
         }
 
         for (var d : devices) {
+            Map<String, Object> data = base.getData();
+            String title = base.getTitle();
+            String body = base.getBody();
+
+            if (d.getPlatform() == PushPlatform.WEB) {
+                if (d.getPushPublicKey() == null || d.getPushPublicKey().isBlank()) {
+                    log.warn(
+                            "Encrypted web push skipped: missing push public key for userId={}, deviceId={}",
+                            userId,
+                            d.getDeviceId());
+                    results.put(d.getId(), "MISSING_PUSH_KEY");
+                    continue;
+                }
+
+                try {
+                    data = new LinkedHashMap<>();
+                    data.putAll(
+                            pushPayloadEncryptor.encrypt(
+                                    d.getPushPublicKey(),
+                                    d.getPushKeyVersion(),
+                                    title,
+                                    body,
+                                    base.getData()));
+                    title = null;
+                    body = null;
+                    log.info(
+                            "Provider-blind FCM data-only push envelope: eventId={}, recipientKey={}, payload={}",
+                            base.getEventId(),
+                            "push:device:" + d.getDeviceId(),
+                            data);
+                } catch (Exception ex) {
+                    log.warn(
+                            "Encrypted web push failed before provider send: eventId={}, userId={}, deviceId={}, err={}",
+                            base.getEventId(),
+                            userId,
+                            d.getDeviceId(),
+                            ex.getMessage(),
+                            ex);
+                    results.put(d.getId(), "ENCRYPTION_FAILED");
+                    continue;
+                }
+            }
+
             var dto =
                     PushRequestDTO.builder()
                             .eventId(base.getEventId())
                             .recipientKey("push:device:" + d.getDeviceId())
                             .token(d.getToken())
-                            .title(base.getTitle())
-                            .body(base.getBody())
-                            .data(base.getData())
+                            .title(title)
+                            .body(body)
+                            .data(data)
                             .type(base.getType())
                             .build();
 
@@ -112,7 +158,9 @@ public class PushServiceImpl implements PushService {
             Map<String, Object> data =
                     dto.getData() == null ? Collections.emptyMap() : dto.getData();
             String providerMsgId =
-                    pushClient.send(dto.getToken(), dto.getTitle(), dto.getBody(), data);
+                    isEncryptedPayload(data)
+                            ? pushClient.sendData(dto.getToken(), stringData(data))
+                            : pushClient.send(dto.getToken(), dto.getTitle(), dto.getBody(), data);
 
             // 4) Success state
             pushRow.setFcmId(providerMsgId);
@@ -194,5 +242,18 @@ public class PushServiceImpl implements PushService {
             }
             return "FAILED";
         }
+    }
+
+    private boolean isEncryptedPayload(Map<String, Object> data) {
+        return data != null && "1".equals(String.valueOf(data.get("encrypted")));
+    }
+
+    private Map<String, String> stringData(Map<String, Object> data) {
+        Map<String, String> stringData = new HashMap<>(data.size());
+        for (Map.Entry<String, Object> entry : data.entrySet()) {
+            if (entry.getKey() == null || entry.getValue() == null) continue;
+            stringData.put(entry.getKey(), String.valueOf(entry.getValue()));
+        }
+        return stringData;
     }
 }

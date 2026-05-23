@@ -38,4 +38,13 @@ public class FcmPushClient implements PushClient {
         // Send and return provider message ID
         return firebaseMessaging.send(msg.build());
     }
+
+    @Override
+    public String sendData(String token, Map<String, String> data) throws Exception {
+        Message.Builder msg = Message.builder().setToken(token);
+        if (data != null && !data.isEmpty()) {
+            msg.putAllData(data);
+        }
+        return firebaseMessaging.send(msg.build());
+    }
 }

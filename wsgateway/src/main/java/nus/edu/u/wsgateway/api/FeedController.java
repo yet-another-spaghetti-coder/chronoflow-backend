@@ -45,7 +45,8 @@ public class FeedController {
             @RequestHeader(name = "X-Internal-Service-Token", required = false) String token,
             @RequestBody WsPushRequestDTO req) {
         if (!tokenGuard.isInternalTokenValid(token)) {
-            log.warn("Rejected internal WS push with missing/invalid service token");
+            log.warn(
+                    "[WS] Internal push rejected status=403 reason=missing_or_invalid_service_token endpoint=/ws/internal/push");
             return Mono.just(
                     ResponseEntity.status(HttpStatus.FORBIDDEN)
                             .body(Map.<String, Object>of("error", "forbidden")));
@@ -135,7 +136,7 @@ public class FeedController {
                 && !requestedUserId.isBlank()
                 && !requestedUserId.equals(authedUserId)) {
             log.warn(
-                    "[WS] BOLA attempt at {}: authed={} requested={}",
+                    "[WS] BOLA rejected status=403 endpoint={} authed={} requested={}",
                     endpoint,
                     authedUserId,
                     requestedUserId);

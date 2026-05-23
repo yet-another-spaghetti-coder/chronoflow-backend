@@ -29,7 +29,7 @@ spec:
           effect: "NoSchedule"
       containers:
         - name: notification-service
-          image: asia-southeast1-docker.pkg.dev/chronoflow-1/notification-service/notification-service:latest
+          image: asia-southeast1-docker.pkg.dev/chronoflow-1/notification-service/notification-service:pushsec-20260523-1954
           imagePullPolicy: Always
           ports:
             - name: http
