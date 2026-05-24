@@ -7,6 +7,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -241,6 +245,79 @@ class RegServiceImplTest {
         ServiceException exception =
                 assertThrows(ServiceException.class, () -> service.registerAsOrganizer(request));
         assertThat(exception.getCode()).isEqualTo(ACCOUNT_EXIST.getCode());
+    }
+
+    // --- F-10: cross-field password policy ----------------------------------
+
+    @Test
+    void registerAsMember_invokesPasswordPolicyWithUsernameAndEmail() {
+        UserDO pending =
+                UserDO.builder()
+                        .id(userId)
+                        .status(UserStatusEnum.PENDING.getCode())
+                        .email("pending@chrono.sg")
+                        .build();
+        when(userMapper.selectByIdWithoutTenant(userId)).thenReturn(pending);
+        when(passwordEncoder.encode(anyString())).thenReturn("ENC");
+        when(userMapper.updateByIdWithoutTenant(pending)).thenReturn(1);
+
+        RegMemberReqVO req =
+                RegMemberReqVO.builder()
+                        .userId(userId)
+                        .username("new-user")
+                        .password("Strong-Pass-2026!")
+                        .phone("12345678")
+                        .build();
+
+        service.registerAsMember(req);
+
+        verify(passwordPolicyService)
+                .assertNotIdentity("Strong-Pass-2026!", "new-user", "pending@chrono.sg");
+    }
+
+    @Test
+    void registerAsMember_whenPolicyRejects_propagatesAndDoesNotEncode() {
+        UserDO pending =
+                UserDO.builder()
+                        .id(userId)
+                        .status(UserStatusEnum.PENDING.getCode())
+                        .email("pending@chrono.sg")
+                        .build();
+        when(userMapper.selectByIdWithoutTenant(userId)).thenReturn(pending);
+        doThrow(new ServiceException(123, "Password too similar to identity"))
+                .when(passwordPolicyService)
+                .assertNotIdentity(anyString(), anyString(), anyString());
+
+        RegMemberReqVO req =
+                RegMemberReqVO.builder()
+                        .userId(userId)
+                        .username("alice")
+                        .password("alice2026!")
+                        .build();
+
+        assertThrows(ServiceException.class, () -> service.registerAsMember(req));
+        verify(passwordEncoder, never()).encode(anyString());
+        verify(userMapper, never()).updateByIdWithoutTenant(any());
+    }
+
+    @Test
+    void registerAsOrganizer_invokesPasswordPolicyBeforeAccountSetup() {
+        when(userMapper.selectByUsername("alice")).thenReturn(null);
+        doThrow(new ServiceException(123, "Password contains username"))
+                .when(passwordPolicyService)
+                .assertNotIdentity(eq("alice-pass-2026!"), eq("alice"), eq("alice@chrono.sg"));
+
+        RegOrganizerReqVO req =
+                RegOrganizerReqVO.builder()
+                        .username("alice")
+                        .userPassword("alice-pass-2026!")
+                        .userEmail("alice@chrono.sg")
+                        .build();
+
+        assertThrows(ServiceException.class, () -> service.registerAsOrganizer(req));
+        // Tenant/user must NOT be created if policy rejects.
+        verify(tenantMapper, never()).insert(any());
+        verify(userMapper, never()).insert(any());
     }
 
     @Test

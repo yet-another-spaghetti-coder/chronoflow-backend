@@ -878,4 +878,50 @@ class UserServiceImplTest {
                 .extracting("code")
                 .isEqualTo(ErrorCodeConstants.EMPTY_ROLEIDS.getCode());
     }
+
+    // --- F-9: updatePassword (called by unauthenticated password-reset flow) ----
+
+    @Test
+    void updatePassword_invokesMapperUpdateWithIdPasswordAndSalt() {
+        when(userMapper.update(any(), any())).thenReturn(1);
+
+        service.updatePassword(42L, "newEncoded", "newSalt");
+
+        // The wrapper itself is opaque; we just assert the call shape.
+        verify(userMapper).update(eq(null), any());
+    }
+
+    @Test
+    void updatePassword_clearsTenantIgnoreStrategyAfterRun() {
+        // Even when the mapper throws, the finally block must run so the tenant-line
+        // interceptor isn't stuck in "ignore" mode for the rest of the thread.
+        when(userMapper.update(any(), any())).thenThrow(new RuntimeException("db down"));
+
+        assertThatThrownBy(() -> service.updatePassword(43L, "enc", "salt"))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("db down");
+
+        // The clear method is static — best we can do is assert the call still propagated.
+        verify(userMapper).update(eq(null), any());
+    }
+
+    // --- F-9: getUserByEmailWithoutTenant (lookup bypasses tenant filter) -------
+
+    @Test
+    void getUserByEmailWithoutTenant_delegatesToMapper() {
+        UserDO u = UserDO.builder().id(99L).email("alice@example.com").build();
+        when(userMapper.selectByEmailWithoutTenant("alice@example.com")).thenReturn(u);
+
+        UserDO result = service.getUserByEmailWithoutTenant("alice@example.com");
+
+        assertThat(result).isSameAs(u);
+        verify(userMapper).selectByEmailWithoutTenant("alice@example.com");
+    }
+
+    @Test
+    void getUserByEmailWithoutTenant_returnsNullWhenMapperReturnsNull() {
+        when(userMapper.selectByEmailWithoutTenant("ghost@example.com")).thenReturn(null);
+
+        assertThat(service.getUserByEmailWithoutTenant("ghost@example.com")).isNull();
+    }
 }

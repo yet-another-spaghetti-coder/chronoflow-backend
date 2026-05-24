@@ -2,13 +2,18 @@ package nus.edu.u.user.service.auth;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import cn.dev33.satoken.context.mock.SaTokenContextMockUtil;
 import cn.dev33.satoken.stp.StpUtil;
 import java.util.List;
 import nus.edu.u.common.enums.CommonStatusEnum;
+import nus.edu.u.common.enums.ErrorCodeConstants;
 import nus.edu.u.common.exception.ServiceException;
+import nus.edu.u.framework.security.audit.SecurityAuditLogger;
+import nus.edu.u.framework.security.audit.SecurityAuditLogger.SecurityEvent;
 import nus.edu.u.framework.security.lockout.LoginAttemptCounter;
 import nus.edu.u.user.domain.dataobject.user.UserDO;
 import nus.edu.u.user.domain.dto.RoleDTO;
@@ -37,6 +42,7 @@ class AuthServiceImplTest {
     // F-3: lockout pre-check fires before BCrypt in AuthServiceImpl.authenticate;
     // default isLocked() → false (Mockito default for boolean) is exactly what these tests want.
     @Mock private LoginAttemptCounter loginAttemptCounter;
+    @Mock private SecurityAuditLogger auditLogger;
 
     @InjectMocks private AuthServiceImpl service;
 
@@ -72,6 +78,112 @@ class AuthServiceImplTest {
         UserDO result = service.authenticate("alice", "pwd");
 
         assertThat(result).isEqualTo(user);
+        // F-3: success clears the failure counter
+        verify(loginAttemptCounter).recordSuccess("alice");
+    }
+
+    // F-3 / C-02: lockout pre-check fires before user lookup or BCrypt.
+    @Test
+    void authenticate_whenAccountLocked_throwsBeforeCredentialCheck() {
+        when(loginAttemptCounter.isLocked("alice")).thenReturn(true);
+
+        assertThatThrownBy(() -> service.authenticate("alice", "pwd"))
+                .isInstanceOf(ServiceException.class)
+                .extracting("code")
+                .isEqualTo(ErrorCodeConstants.AUTH_ACCOUNT_LOCKED.getCode());
+
+        verify(userService, never()).getUserByUsername("alice");
+        verify(auditLogger)
+                .log(
+                        org.mockito.ArgumentMatchers.eq(SecurityEvent.LOGIN_FAILED_BAD_CREDENTIALS),
+                        org.mockito.ArgumentMatchers.isNull(),
+                        org.mockito.ArgumentMatchers.isNull(),
+                        org.mockito.ArgumentMatchers.contains("locked"));
+    }
+
+    // F-3: unknown user → record failure under the supplied username, still throw bad creds.
+    @Test
+    void authenticate_unknownUser_recordsFailureAndThrows() {
+        when(userService.getUserByUsername("ghost")).thenReturn(null);
+
+        assertThatThrownBy(() -> service.authenticate("ghost", "pwd"))
+                .isInstanceOf(ServiceException.class)
+                .extracting("code")
+                .isEqualTo(ErrorCodeConstants.AUTH_LOGIN_BAD_CREDENTIALS.getCode());
+
+        verify(loginAttemptCounter).recordFailure("ghost");
+        verify(loginAttemptCounter, never()).recordSuccess(org.mockito.ArgumentMatchers.any());
+    }
+
+    // F-3: wrong password → record failure under the real user id.
+    @Test
+    void authenticate_wrongPassword_recordsFailureAndThrows() {
+        UserDO user =
+                UserDO.builder()
+                        .id(11L)
+                        .username("alice")
+                        .password("encoded")
+                        .salt("salt")
+                        .status(CommonStatusEnum.ENABLE.getStatus())
+                        .build();
+        when(userService.getUserByUsername("alice")).thenReturn(user);
+        when(userService.isPasswordMatch("bad", "encoded", "salt")).thenReturn(false);
+
+        assertThatThrownBy(() -> service.authenticate("alice", "bad"))
+                .isInstanceOf(ServiceException.class)
+                .extracting("code")
+                .isEqualTo(ErrorCodeConstants.AUTH_LOGIN_BAD_CREDENTIALS.getCode());
+
+        verify(loginAttemptCounter).recordFailure("alice");
+    }
+
+    // F-3: when this failure is the one that trips the lock, an extra audit signal fires.
+    @Test
+    void authenticate_failureThatTripsLock_emitsExtraAuditSignal() {
+        UserDO user =
+                UserDO.builder()
+                        .id(12L)
+                        .username("alice")
+                        .password("encoded")
+                        .salt("salt")
+                        .status(CommonStatusEnum.ENABLE.getStatus())
+                        .build();
+        when(userService.getUserByUsername("alice")).thenReturn(user);
+        when(userService.isPasswordMatch("bad", "encoded", "salt")).thenReturn(false);
+        when(loginAttemptCounter.recordFailure("alice")).thenReturn(true);
+
+        assertThatThrownBy(() -> service.authenticate("alice", "bad"))
+                .isInstanceOf(ServiceException.class);
+
+        // First call: regular bad-credentials audit. Second call: auto-lock signal.
+        verify(auditLogger)
+                .log(
+                        org.mockito.ArgumentMatchers.eq(SecurityEvent.LOGIN_FAILED_BAD_CREDENTIALS),
+                        org.mockito.ArgumentMatchers.eq("12"),
+                        org.mockito.ArgumentMatchers.isNull(),
+                        org.mockito.ArgumentMatchers.contains("auto-locked"));
+    }
+
+    // F-3: disabled account still throws, but does NOT clear the failure counter.
+    @Test
+    void authenticate_disabledUser_throwsAndDoesNotClearCounter() {
+        UserDO user =
+                UserDO.builder()
+                        .id(13L)
+                        .username("alice")
+                        .password("encoded")
+                        .salt("salt")
+                        .status(CommonStatusEnum.DISABLE.getStatus())
+                        .build();
+        when(userService.getUserByUsername("alice")).thenReturn(user);
+        when(userService.isPasswordMatch("pwd", "encoded", "salt")).thenReturn(true);
+
+        assertThatThrownBy(() -> service.authenticate("alice", "pwd"))
+                .isInstanceOf(ServiceException.class)
+                .extracting("code")
+                .isEqualTo(ErrorCodeConstants.AUTH_LOGIN_USER_DISABLED.getCode());
+
+        verify(loginAttemptCounter, never()).recordSuccess(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
