@@ -1,0 +1,31 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: redis-allow-chronoflow-apps
+  namespace: chronoflow
+  labels:
+    app: redis
+spec:
+  podSelector:
+    matchLabels:
+      app: redis
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - gateway
+                  - user-service
+                  - event-service
+                  - task-service
+                  - attendee-service
+                  - file-service
+                  - notification-service
+                  - wsgateway
+      ports:
+        - protocol: TCP
+          port: 6379

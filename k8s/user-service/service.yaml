@@ -12,5 +12,9 @@ spec:
       targetPort: 8081
       protocol: TCP
       name: http
+    - port: 50051
+      targetPort: 50051
+      protocol: TCP
+      name: dubbo
   selector:
     app: user-service

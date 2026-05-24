@@ -14,6 +14,7 @@ public class WsGatewayLimitPropertiesConfig {
     private String rateKey = "rate:ws:global";
     private int rateLimit = 400;
     private Duration rateWindow = Duration.ofMinutes(1);
+    private String internalServiceToken = "";
 
     private Timeouts timeouts = new Timeouts();
     private RetryProps retry = new RetryProps();

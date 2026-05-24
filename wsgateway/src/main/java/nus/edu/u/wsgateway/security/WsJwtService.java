@@ -20,8 +20,8 @@ import org.springframework.stereotype.Service;
  *
  * <p>This token is scoped to WebSocket connection authentication and is minted only after the
  * normal Sa-Token HTTP session is validated. It is intentionally separate from the main Sa-Token
- * access token, so a leak of this token cannot escalate to general API access (different audience
- * + purpose + short TTL).
+ * access token, so a leak of this token cannot escalate to general API access (different audience +
+ * purpose + short TTL).
  *
  * <p>Signed with HMAC-SHA256 using {@link WsJwtProperties#getSecret()}. No external JWT library:
  * minimal attack surface and easy to audit.
@@ -102,7 +102,8 @@ public class WsJwtService {
         String payloadB64 = parts[1];
         String sigB64 = parts[2];
 
-        byte[] expectedSig = hmacSha256((headerB64 + "." + payloadB64).getBytes(StandardCharsets.UTF_8));
+        byte[] expectedSig =
+                hmacSha256((headerB64 + "." + payloadB64).getBytes(StandardCharsets.UTF_8));
         byte[] providedSig;
         try {
             providedSig = B64URL_DEC.decode(sigB64);

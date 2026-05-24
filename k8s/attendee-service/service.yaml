@@ -12,5 +12,9 @@ spec:
       targetPort: 8084
       protocol: TCP
       name: http
+    - port: 50056
+      targetPort: 50056
+      protocol: TCP
+      name: dubbo
   selector:
     app: attendee-service

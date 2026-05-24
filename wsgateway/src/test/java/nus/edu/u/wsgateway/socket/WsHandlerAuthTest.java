@@ -1,7 +1,6 @@
 package nus.edu.u.wsgateway.socket;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
@@ -10,6 +9,8 @@ import nus.edu.u.wsgateway.runtime.LocalConnectionRegistry;
 import nus.edu.u.wsgateway.security.WsHandshakeProperties;
 import nus.edu.u.wsgateway.security.WsJwtProperties;
 import nus.edu.u.wsgateway.security.WsJwtService;
+import nus.edu.u.wsgateway.security.WsSecurityProperties;
+import nus.edu.u.wsgateway.security.WsTokenGuard;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
@@ -25,6 +26,7 @@ class WsHandlerAuthTest {
     private WsHandler handler;
     private WsJwtService jwtService;
     private WsHandshakeProperties handshakeProps;
+    private WsTokenGuard tokenGuard;
     private final ObjectMapper mapper = new ObjectMapper();
 
     @BeforeEach
@@ -36,9 +38,14 @@ class WsHandlerAuthTest {
         handshakeProps = new WsHandshakeProperties();
         handshakeProps.setAllowedOrigins(
                 List.of("https://chronoflow.example.com", "http://localhost:5173"));
+        tokenGuard = acceptingTokenGuard();
         handler =
                 new WsHandler(
-                        mock(LocalConnectionRegistry.class), jwtService, handshakeProps, mapper);
+                        new LocalConnectionRegistry(mapper),
+                        jwtService,
+                        handshakeProps,
+                        mapper,
+                        tokenGuard);
     }
 
     @Test
@@ -79,6 +86,21 @@ class WsHandlerAuthTest {
     }
 
     @Test
+    void tryAuth_replayedJti_returnsNull() {
+        handler =
+                new WsHandler(
+                        new LocalConnectionRegistry(mapper),
+                        jwtService,
+                        handshakeProps,
+                        mapper,
+                        rejectingTokenGuard());
+        String token = jwtService.mint("u-42").token();
+        WebSocketMessage msg = textMessage("{\"type\":\"AUTH\",\"token\":\"" + token + "\"}");
+
+        assertThat(handler.tryAuth(msg)).isNull();
+    }
+
+    @Test
     void tryAuth_malformedJson_returnsNull() {
         assertThat(handler.tryAuth(textMessage("not-json"))).isNull();
         assertThat(handler.tryAuth(textMessage("{"))).isNull();
@@ -94,8 +116,7 @@ class WsHandlerAuthTest {
 
     @Test
     void tryAuth_nonTextFrame_returnsNull() {
-        WebSocketMessage binary =
-                new WebSocketMessage(Type.BINARY, BUF.wrap(new byte[] {1, 2, 3}));
+        WebSocketMessage binary = new WebSocketMessage(Type.BINARY, BUF.wrap(new byte[] {1, 2, 3}));
         assertThat(handler.tryAuth(binary)).isNull();
     }
 
@@ -142,7 +163,8 @@ class WsHandlerAuthTest {
     void isOriginAllowed_failsClosedWhenAllowlistEmpty() {
         WsHandshakeProperties empty = new WsHandshakeProperties();
         WsHandler emptyHandler =
-                new WsHandler(mock(LocalConnectionRegistry.class), jwtService, empty, mapper);
+                new WsHandler(
+                        new LocalConnectionRegistry(mapper), jwtService, empty, mapper, tokenGuard);
 
         assertThat(emptyHandler.isOriginAllowed("https://chronoflow.example.com")).isFalse();
         assertThat(emptyHandler.isOriginAllowed("http://localhost:5173")).isFalse();
@@ -150,7 +172,21 @@ class WsHandlerAuthTest {
     }
 
     private static WebSocketMessage textMessage(String text) {
-        return new WebSocketMessage(
-                Type.TEXT, BUF.wrap(text.getBytes(StandardCharsets.UTF_8)));
+        return new WebSocketMessage(Type.TEXT, BUF.wrap(text.getBytes(StandardCharsets.UTF_8)));
+    }
+
+    private static WsTokenGuard acceptingTokenGuard() {
+        WsSecurityProperties props = new WsSecurityProperties();
+        props.setReplayProtectionEnabled(false);
+        return new WsTokenGuard(null, props);
+    }
+
+    private static WsTokenGuard rejectingTokenGuard() {
+        return new WsTokenGuard(null, new WsSecurityProperties()) {
+            @Override
+            public boolean consumeJti(String userId, String jti, long expEpochSeconds) {
+                return false;
+            }
+        };
     }
 }

@@ -50,6 +50,11 @@ spring:
       port: ${DEV_REDIS_PORT}
       database: ${DEV_REDIS_DATABASE}
       # password: ${DEV_REDIS_PASSWORD}
+  cloud:
+    nacos:
+      server-addr: ${NACOS_HOST:localhost}:${NACOS_PORT:8848}
+      username: ${NACOS_USERNAME:nacos}
+      password: ${NACOS_PASSWORD:nacos}
 
 # Lock4j config
 lock4j:
@@ -61,3 +66,8 @@ logging:
   level:
     nus.edu.u: debug
     org.springframework: warn
+
+dubbo:
+  registry:
+    address: nacos://${NACOS_HOST:localhost}:${NACOS_PORT:8848}?username=${NACOS_USERNAME:nacos}&password=${NACOS_PASSWORD:nacos}
+    use-as-config-center: false

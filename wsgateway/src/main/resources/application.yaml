@@ -172,5 +172,11 @@ chronoflow:
       # Must be set via env / Secret Manager (>= 32 chars). No default in source.
       secret: ${WS_JWT_SECRET:}
       clock-skew-seconds: 5
+    security:
+      # Required on /ws/internal/**. Empty = reject all.
+      internal-service-token: ${WS_INTERNAL_SERVICE_TOKEN:}
+      token-rate-limit: ${WS_TOKEN_RATE_LIMIT:20}
+      token-rate-window: ${WS_TOKEN_RATE_WINDOW:1m}
+      replay-protection-enabled: ${WS_REPLAY_PROTECTION_ENABLED:true}
 
 

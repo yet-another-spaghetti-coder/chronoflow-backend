@@ -15,6 +15,7 @@ Or in order:
 ```bash
 kubectl apply -f k8s/redis/deployment.yaml
 kubectl apply -f k8s/redis/service.yaml
+kubectl apply -f k8s/redis/networkpolicy.yaml
 ```
 
 ## Usage
@@ -22,6 +23,7 @@ kubectl apply -f k8s/redis/service.yaml
 - **Host (in-cluster):** `redis.chronoflow.svc.cluster.local`
 - **Port:** `6379`
 - No password by default. To add auth, use a Redis secret and set `PROD_REDIS_PASSWORD` (or equivalent) in services that need it.
+- **NetworkPolicy:** `redis-allow-chronoflow-apps` restricts Redis ingress to approved ChronoFlow application pods on TCP/6379.
 
 ## Optional: persistent data
 

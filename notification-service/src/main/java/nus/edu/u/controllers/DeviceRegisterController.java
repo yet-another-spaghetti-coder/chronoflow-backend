@@ -24,13 +24,14 @@ public class DeviceRegisterController {
         String userId = String.valueOf(StpUtil.getLoginIdAsLong());
 
         log.info(
-                "[PUSH] registerDevice userId={}, token?={}, deviceId={}, platform={}",
+                "[PUSH] registerDevice userId={}, token?={}, deviceId={}, platform={}, pushKey?={}",
                 userId,
                 dto.getToken() != null
                         ? dto.getToken().substring(0, Math.min(12, dto.getToken().length()))
                         : null,
                 dto.getDeviceId(),
-                dto.getPlatform());
+                dto.getPlatform(),
+                dto.getPushPublicKey() != null && !dto.getPushPublicKey().isBlank());
 
         if (dto.getPlatform() == null) dto.setPlatform(PushPlatform.WEB);
         deviceRegistryService.register(userId, dto);

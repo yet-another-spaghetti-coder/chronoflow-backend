@@ -1,0 +1,18 @@
+spring:
+  data:
+    redis:
+      host: ${DEV_REDIS_HOST:localhost}
+      port: ${DEV_REDIS_PORT:6379}
+      database: ${DEV_REDIS_DATABASE:0}
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://root:root@localhost:27017/chronoflow_db?authSource=admin}
+  cloud:
+    nacos:
+      server-addr: ${NACOS_HOST:localhost}:${NACOS_PORT:8848}
+      username: ${NACOS_USERNAME:nacos}
+      password: ${NACOS_PASSWORD:nacos}
+
+dubbo:
+  registry:
+    address: nacos://${NACOS_HOST:localhost}:${NACOS_PORT:8848}?username=${NACOS_USERNAME:nacos}&password=${NACOS_PASSWORD:nacos}
+    use-as-config-center: false

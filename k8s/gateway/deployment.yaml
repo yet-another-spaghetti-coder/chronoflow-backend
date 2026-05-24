@@ -19,17 +19,22 @@ spec:
       app: gateway
   template:
     metadata:
+      annotations:
+        sidecar.istio.io/inject: "true"
+        traffic.sidecar.istio.io/excludeOutboundPorts: "8848,9848"
       labels:
         app: gateway
         version: v1
+        sidecar.istio.io/inject: "true"
     spec:
+      serviceAccountName: gateway-sa
       tolerations:
         - key: "node.gke.io/balloon-pod-resize"
           operator: "Exists"
           effect: "NoSchedule"
       containers:
         - name: gateway
-          image: asia-southeast1-docker.pkg.dev/chronoflow-1/gateway/gateway:latest
+          image: asia-southeast1-docker.pkg.dev/chronoflow-1/gateway/gateway@sha256:5fb789090bc2de02a9e7644f2315a6c88c153e20b38602b805e4d4eb94ab7fb8
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -51,22 +56,18 @@ spec:
             - name: NACOS_PASSWORD
               value: "nacos"
             - name: PROD_REDIS_HOST
-              value: "10.122.0.3"
+              value: "redis"
             - name: PROD_REDIS_PORT
               value: "6379"
-            - name: PROD_REDIS_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: redis-auth
-                  key: password
             - name: SPRING_DATA_REDIS_USERNAME
               value: "default"
-            # Spring Boot binds this directly to spring.data.redis.password (high precedence vs Nacos YAML).
             - name: SPRING_DATA_REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: redis-auth
                   key: password
+            - name: CHRONOFLOW_WSS_URL
+              value: "wss://api.chronoflow.site"
           resources:
             requests:
               memory: "512Mi"

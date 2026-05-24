@@ -2,12 +2,16 @@ spring:
   # Redis config
   data:
     redis:
-      host: ${DEV_REDIS_HOST}
-      port: ${DEV_REDIS_PORT}
-      database: ${DEV_REDIS_DATABASE}
+      host: ${DEV_REDIS_HOST:localhost}
+      port: ${DEV_REDIS_PORT:6379}
+      database: ${DEV_REDIS_DATABASE:0}
       username: ${REDIS_USERNAME:default}
       # password: ${DEV_REDIS_PASSWORD}
   cloud:
+    nacos:
+      server-addr: ${NACOS_HOST:localhost}:${NACOS_PORT:8848}
+      username: ${NACOS_USERNAME:nacos}
+      password: ${NACOS_PASSWORD:nacos}
     gateway:
       globalcors:
         add-to-simple-url-handler-mapping: true

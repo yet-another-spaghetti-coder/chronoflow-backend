@@ -20,7 +20,11 @@ resources:
   - external-secrets/external-secret-pub-sub.yaml
   - external-secrets/external-secret-redis.yaml
   - external-secrets/external-secret-mongodb.yaml
+  - istio/serviceaccounts.yaml
+  - istio/user-service-strict-mtls.yaml
+  - istio/authorization-policies.yaml
   - nacos/deployment.yaml
+  - nacos/networkpolicy.yaml
 
   # Gateways & services
   - gateway/deployment.yaml

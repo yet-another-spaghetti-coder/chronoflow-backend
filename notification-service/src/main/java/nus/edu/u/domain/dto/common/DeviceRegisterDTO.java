@@ -23,4 +23,13 @@ public class DeviceRegisterDTO {
 
     /** Device status (optional, usually ACTIVE on registration) */
     @Builder.Default private DeviceStatus status = DeviceStatus.ACTIVE;
+
+    /** Browser-generated public key for provider-blind web push encryption. */
+    private String pushPublicKey;
+
+    /** Public key/envelope algorithm, for example ECDH-P256+A256GCM. */
+    private String pushKeyAlg;
+
+    /** Client-side key version used for rotation/debug evidence. */
+    private String pushKeyVersion;
 }

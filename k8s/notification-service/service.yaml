@@ -12,5 +12,9 @@ spec:
       targetPort: 8086
       protocol: TCP
       name: http
+    - port: 50053
+      targetPort: 50053
+      protocol: TCP
+      name: dubbo
   selector:
     app: notification-service

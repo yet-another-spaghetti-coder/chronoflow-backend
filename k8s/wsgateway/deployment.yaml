@@ -19,9 +19,13 @@ spec:
       app: wsgateway
   template:
     metadata:
+      annotations:
+        sidecar.istio.io/inject: "true"
+        traffic.sidecar.istio.io/excludeOutboundPorts: "8848,9848"
       labels:
         app: wsgateway
         version: v1
+        sidecar.istio.io/inject: "true"
     spec:
       serviceAccountName: wsgateway-sa
       tolerations:
@@ -30,11 +34,14 @@ spec:
           effect: "NoSchedule"
       containers:
         - name: wsgateway
-          image: shchow/wsgateway:latest
+          image: asia-southeast1-docker.pkg.dev/chronoflow-1/wsgateway/wsgateway@sha256:c82f6b06f0f0fc766e28fdac6046d130a27c9be256bff7ba9fcce96c7abc0b48
           imagePullPolicy: Always
           ports:
             - name: http
               containerPort: 8087
+              protocol: TCP
+            - name: dubbo
+              containerPort: 50053
               protocol: TCP
           env:
             - name: SPRING_PROFILES_ACTIVE
@@ -51,11 +58,36 @@ spec:
               value: "nacos"
             - name: NACOS_PASSWORD
               value: "nacos"
+            - name: DUBBO_IP_TO_REGISTRY
+              value: wsgateway.chronoflow.svc.cluster.local
+            - name: DUBBO_PORT_TO_REGISTRY
+              value: "50053"
             - name: MONGODB_URI
               valueFrom:
                 secretKeyRef:
                   name: mongodb
                   key: uri
+            - name: SPRING_DATA_REDIS_HOST
+              value: "redis"
+            - name: SPRING_DATA_REDIS_PORT
+              value: "6379"
+            - name: SPRING_DATA_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-auth
+                  key: password
+            - name: WS_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: wsgateway-secrets
+                  key: ws-jwt-secret
+            - name: WS_ALLOWED_ORIGINS
+              value: "https://chronoflow.site,https://chronoflow-frontend-production.up.railway.app"
+            - name: WS_INTERNAL_SERVICE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: wsgateway-secrets
+                  key: internal-service-token
             - name: PUB_SUB_SERVICE_ACCOUNT_JSON
               valueFrom:
                 secretKeyRef:
@@ -69,7 +101,7 @@ spec:
             - name: FIREBASE_SERVICE_ACCOUNT_JSON
               valueFrom:
                 secretKeyRef:
-                  name: firebase
+                  name: firebase-from-gcp-sm
                   key: account-json
           resources:
             requests:

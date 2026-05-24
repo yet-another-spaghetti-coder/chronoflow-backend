@@ -5,9 +5,58 @@ spring:
       host: ${PROD_REDIS_HOST}
       port: ${PROD_REDIS_PORT}
       username: ${REDIS_USERNAME:default}
-      password: ${PROD_REDIS_PASSWORD}
   cloud:
     gateway:
+      routes:
+        # Prod runs inside Kubernetes, so route through ClusterIP DNS instead of depending on Nacos
+        # discovery for north-south traffic.
+        - id: user
+          uri: http://user-service:8081
+          predicates:
+            - Path=/users/**
+          filters:
+            - RewritePath=/users/v3/api-docs, /v3/api-docs
+        - id: event
+          uri: http://event-service:8082
+          predicates:
+            - Path=/events/**
+          filters:
+            - RewritePath=/events/v3/api-docs, /v3/api-docs
+        - id: task
+          uri: http://task-service:8083
+          predicates:
+            - Path=/tasks/**
+          filters:
+            - RewritePath=/tasks/v3/api-docs, /v3/api-docs
+        - id: attendee
+          uri: http://attendee-service:8084
+          predicates:
+            - Path=/attendees/**
+          filters:
+            - RewritePath=/attendees/v3/api-docs, /v3/api-docs
+        - id: file
+          uri: http://file-service:8085
+          predicates:
+            - Path=/files/**
+          filters:
+            - RewritePath=/files/v3/api-docs, /v3/api-docs
+        - id: notification
+          uri: http://notification-service:8086
+          predicates:
+            - Path=/notifications/**
+          filters:
+            - RewritePath=/notifications/v3/api-docs, /v3/api-docs
+        - id: ws-upgrade
+          uri: ws://wsgateway:8087
+          predicates:
+            - Path=/ws
+            - Header=Upgrade, websocket
+          order: -10
+        - id: ws-api
+          uri: http://wsgateway:8087
+          predicates:
+            - Path=/ws/**
+          order: 0
       globalcors:
         add-to-simple-url-handler-mapping: true
         cors-configurations:

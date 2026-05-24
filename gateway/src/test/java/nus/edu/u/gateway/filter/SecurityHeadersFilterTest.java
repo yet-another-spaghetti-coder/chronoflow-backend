@@ -1,17 +1,13 @@
 package nus.edu.u.gateway.filter;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.http.HttpHeaders;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.test.util.ReflectionTestUtils;
-import reactor.core.publisher.Mono;
+import org.springframework.web.server.WebFilterChain;
 
 /** PLS 03: WebSocket endpoint is added to CSP connect-src (and only when configured). */
 class SecurityHeadersFilterTest {
@@ -61,15 +57,13 @@ class SecurityHeadersFilterTest {
         runFilter(filter, exchange);
         HttpHeaders headers = exchange.getResponse().getHeaders();
 
-        assertThat(headers.getFirst("Strict-Transport-Security"))
-                .contains("max-age=31536000");
+        assertThat(headers.getFirst("Strict-Transport-Security")).contains("max-age=31536000");
         assertThat(headers.getFirst("X-Content-Type-Options")).isEqualTo("nosniff");
         assertThat(headers.getFirst("X-Frame-Options")).isEqualTo("DENY");
         assertThat(headers.getFirst("Referrer-Policy"))
                 .isEqualTo("strict-origin-when-cross-origin");
         assertThat(headers.getFirst("X-XSS-Protection")).isEqualTo("1; mode=block");
-        assertThat(headers.getFirst("Permissions-Policy"))
-                .contains("camera=()");
+        assertThat(headers.getFirst("Permissions-Policy")).contains("camera=()");
     }
 
     private static String applyAndReadCsp(SecurityHeadersFilter filter) {
@@ -84,10 +78,8 @@ class SecurityHeadersFilterTest {
         return MockServerWebExchange.from(MockServerHttpRequest.get("/health"));
     }
 
-    private static void runFilter(
-            SecurityHeadersFilter filter, MockServerWebExchange exchange) {
-        GatewayFilterChain chain = mock(GatewayFilterChain.class);
-        when(chain.filter(any())).thenReturn(Mono.empty());
+    private static void runFilter(SecurityHeadersFilter filter, MockServerWebExchange exchange) {
+        WebFilterChain chain = filteredExchange -> filteredExchange.getResponse().setComplete();
         filter.filter(exchange, chain).block();
     }
 }

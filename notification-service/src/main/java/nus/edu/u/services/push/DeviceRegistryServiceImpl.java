@@ -29,6 +29,11 @@ public class DeviceRegistryServiceImpl implements DeviceRegistryService {
 
         String deviceId = dto.getDeviceId() == null ? null : dto.getDeviceId().trim();
         String token = dto.getToken() == null ? null : dto.getToken().trim();
+        String pushPublicKey =
+                dto.getPushPublicKey() == null ? null : dto.getPushPublicKey().trim();
+        String pushKeyAlg = dto.getPushKeyAlg() == null ? null : dto.getPushKeyAlg().trim();
+        String pushKeyVersion =
+                dto.getPushKeyVersion() == null ? null : dto.getPushKeyVersion().trim();
 
         if (deviceId == null || deviceId.isBlank())
             throw new IllegalArgumentException("deviceId is required");
@@ -61,6 +66,9 @@ public class DeviceRegistryServiceImpl implements DeviceRegistryService {
                             .deviceId(deviceId)
                             .platform(platform)
                             .token(token)
+                            .pushPublicKey(pushPublicKey)
+                            .pushKeyAlg(pushKeyAlg)
+                            .pushKeyVersion(pushKeyVersion)
                             .status(DeviceStatus.ACTIVE)
                             .build());
             return;
@@ -86,6 +94,21 @@ public class DeviceRegistryServiceImpl implements DeviceRegistryService {
 
         if (device.getPlatform() != platform) {
             device.setPlatform(platform);
+            changed = true;
+        }
+
+        if (!java.util.Objects.equals(pushPublicKey, device.getPushPublicKey())) {
+            device.setPushPublicKey(pushPublicKey);
+            changed = true;
+        }
+
+        if (!java.util.Objects.equals(pushKeyAlg, device.getPushKeyAlg())) {
+            device.setPushKeyAlg(pushKeyAlg);
+            changed = true;
+        }
+
+        if (!java.util.Objects.equals(pushKeyVersion, device.getPushKeyVersion())) {
+            device.setPushKeyVersion(pushKeyVersion);
             changed = true;
         }
 

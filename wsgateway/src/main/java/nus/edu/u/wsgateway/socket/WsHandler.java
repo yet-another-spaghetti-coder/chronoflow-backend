@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import nus.edu.u.wsgateway.runtime.LocalConnectionRegistry;
 import nus.edu.u.wsgateway.security.WsHandshakeProperties;
 import nus.edu.u.wsgateway.security.WsJwtService;
+import nus.edu.u.wsgateway.security.WsTokenGuard;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.socket.CloseStatus;
@@ -26,9 +27,9 @@ import reactor.core.scheduler.Schedulers;
 /**
  * Reactive WebSocket handler with explicit per-connection authentication.
  *
- * <p>PLS 03 (CSWH mitigation): the connection is treated as unauthenticated at upgrade time.
- * Before subscribing the session to any user's outbound channel, this handler waits for an explicit
- * {@code {"type":"AUTH","token":"<ws-jwt>"}} message and verifies the WS-only JWT minted by {@code
+ * <p>PLS 03 (CSWH mitigation): the connection is treated as unauthenticated at upgrade time. Before
+ * subscribing the session to any user's outbound channel, this handler waits for an explicit {@code
+ * {"type":"AUTH","token":"<ws-jwt>"}} message and verifies the WS-only JWT minted by {@code
  * /ws/token}. The {@code userId} is derived from the JWT {@code sub} claim — never from the URL
  * query string, request body, or any client-supplied input.
  *
@@ -48,8 +49,8 @@ public class WsHandler implements WebSocketHandler {
     private static final int MAX_AUTH_FRAME_CHARS = 4096;
 
     /**
-     * Bound parse cost for authenticated inbound. Below the 64KB WebSocket frame cap, but
-     * still defensive against an authenticated session that starts misbehaving.
+     * Bound parse cost for authenticated inbound. Below the 64KB WebSocket frame cap, but still
+     * defensive against an authenticated session that starts misbehaving.
      */
     private static final int MAX_POST_AUTH_FRAME_CHARS = 8192;
 
@@ -64,6 +65,7 @@ public class WsHandler implements WebSocketHandler {
     private final WsJwtService jwtService;
     private final WsHandshakeProperties handshakeProps;
     private final ObjectMapper mapper;
+    private final WsTokenGuard tokenGuard;
 
     @Override
     public Mono<Void> handle(WebSocketSession session) {
@@ -73,8 +75,7 @@ public class WsHandler implements WebSocketHandler {
         // allow-list is empty so a misconfigured deploy cannot silently accept arbitrary origins.
         String origin = session.getHandshakeInfo().getHeaders().getFirst(HttpHeaders.ORIGIN);
         if (!isOriginAllowed(origin)) {
-            log.warn(
-                    "[WS] rejecting handshake bad_origin='{}' session={}", origin, sessionId);
+            log.warn("[WS] rejecting handshake bad_origin='{}' session={}", origin, sessionId);
             return session.close(BAD_ORIGIN);
         }
 
@@ -87,8 +88,7 @@ public class WsHandler implements WebSocketHandler {
                                 () -> {
                                     if (!authed.get()) {
                                         log.warn(
-                                                "[WS] auth timeout, closing session={}",
-                                                sessionId);
+                                                "[WS] auth timeout, closing session={}", sessionId);
                                         session.close(AUTH_REQUIRED).subscribe();
                                     }
                                 },
@@ -116,10 +116,7 @@ public class WsHandler implements WebSocketHandler {
                             Mono<Void> sendMono = session.send(outbound);
                             Mono<Void> recvMono =
                                     source.skip(1)
-                                            .doOnNext(
-                                                    msg ->
-                                                            handlePostAuth(
-                                                                    session, userId, msg))
+                                            .doOnNext(msg -> handlePostAuth(session, userId, msg))
                                             .then();
                             return Mono.when(sendMono, recvMono).flux();
                         })
@@ -127,13 +124,11 @@ public class WsHandler implements WebSocketHandler {
                 .doFinally(
                         sig -> {
                             watchdog.dispose();
-                            log.info(
-                                    "[WS] disconnect session={} signal={}", sessionId, sig);
+                            log.info("[WS] disconnect session={} signal={}", sessionId, sig);
                         })
                 .onErrorResume(
                         ex -> {
-                            log.warn(
-                                    "[WS] session error {}: {}", sessionId, ex.toString());
+                            log.warn("[WS] session error {}: {}", sessionId, ex.toString());
                             return session.close(AUTH_FAILED);
                         });
     }
@@ -174,6 +169,10 @@ public class WsHandler implements WebSocketHandler {
             }
             String token = node.path("token").asText("");
             WsJwtService.VerifiedClaims claims = jwtService.verify(token);
+            if (!tokenGuard.consumeJti(claims.userId(), claims.jti(), claims.expEpochSeconds())) {
+                log.debug("[WS] AUTH replay rejected userId={}", claims.userId());
+                return null;
+            }
             return claims.userId();
         } catch (WsJwtService.JwtVerificationException e) {
             log.debug("[WS] AUTH verify failed reason={}", e.getMessage());
@@ -194,12 +193,11 @@ public class WsHandler implements WebSocketHandler {
      *   <li>JSON {@code {"type":"PING","ts":...}} -> {@code {"type":"PONG","ts":...}}
      * </ul>
      *
-     * Anything else is silently dropped — never echoed, never logged above debug, never
-     * interpreted as application data. WS messages are signals to the FE; payloads are fetched
-     * out-of-band over authenticated HTTP, so dropping unknown inbound has no functional cost.
+     * Anything else is silently dropped — never echoed, never logged above debug, never interpreted
+     * as application data. WS messages are signals to the FE; payloads are fetched out-of-band over
+     * authenticated HTTP, so dropping unknown inbound has no functional cost.
      */
-    private void handlePostAuth(
-            WebSocketSession session, String userId, WebSocketMessage msg) {
+    private void handlePostAuth(WebSocketSession session, String userId, WebSocketMessage msg) {
         if (msg.getType() != WebSocketMessage.Type.TEXT) {
             return;
         }
