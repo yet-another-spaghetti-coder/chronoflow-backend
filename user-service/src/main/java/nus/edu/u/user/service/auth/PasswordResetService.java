@@ -4,9 +4,9 @@ package nus.edu.u.user.service.auth;
  * Password reset service interface.
  *
  * <p>Implements the self-service password-reset flow (SR-A-06 / C-16): a user submits their email,
- * the system issues a single-use, time-limited token bound to the account, the link is delivered
- * to the registered email, and the user supplies the token together with a new password to
- * complete the reset.
+ * the system issues a single-use, time-limited token bound to the account, the link is delivered to
+ * the registered email, and the user supplies the token together with a new password to complete
+ * the reset.
  */
 public interface PasswordResetService {
 

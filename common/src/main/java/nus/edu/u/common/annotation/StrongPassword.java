@@ -11,11 +11,11 @@ import nus.edu.u.common.validation.StrongPasswordValidator;
 
 /**
  * Marks a {@code String} field as a user password that must satisfy ChronoFlow's password policy
- * (SR-A-07): length 12–128, at least one each of upper-case, lower-case, digit, and symbol, and
- * not present in the bundled breached-password list.
+ * (SR-A-07): length 12–128, at least one each of upper-case, lower-case, digit, and symbol, and not
+ * present in the bundled breached-password list.
  *
- * <p>Cross-field rules (e.g. "must not equal the user's email/username") cannot be expressed at
- * the field level — invoke {@code PasswordPolicyService.assertNotIdentity} at the service layer.
+ * <p>Cross-field rules (e.g. "must not equal the user's email/username") cannot be expressed at the
+ * field level — invoke {@code PasswordPolicyService.assertNotIdentity} at the service layer.
  */
 @Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)

@@ -16,8 +16,7 @@ public class UpdateProfileReqVO {
     @Size(min = 4, max = 32, message = "Username length must be 4~32")
     private String username;
 
-    @StrongPassword
-    private String password;
+    @StrongPassword private String password;
 
     @Email(message = "Email format invalid")
     private String email;

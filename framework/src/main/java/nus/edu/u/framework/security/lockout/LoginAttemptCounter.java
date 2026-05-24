@@ -49,8 +49,8 @@ public class LoginAttemptCounter {
     }
 
     /**
-     * Record a failed login. Returns true when the failure has just tripped the lock — callers
-     * can use this to emit a one-time audit event without spamming on every subsequent attempt.
+     * Record a failed login. Returns true when the failure has just tripped the lock — callers can
+     * use this to emit a one-time audit event without spamming on every subsequent attempt.
      */
     public boolean recordFailure(String username) {
         if (username == null || username.isBlank()) {

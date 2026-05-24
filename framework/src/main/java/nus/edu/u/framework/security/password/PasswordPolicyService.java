@@ -7,20 +7,19 @@ import static nus.edu.u.common.utils.exception.ServiceExceptionUtil.exception0;
  * Enforces password-policy rules that the {@code @StrongPassword} field-level annotation cannot
  * express because they require other fields (the user's email / username).
  *
- * <p>This is the second half of SR-A-07. Call from the service layer immediately before
- * persisting the new password. Throws a {@link nus.edu.u.common.exception.ServiceException}
- * carrying {@code PASSWORD_POLICY_VIOLATION} so the global handler returns a clean 400 to the
- * client without leaking a stack trace.
+ * <p>This is the second half of SR-A-07. Call from the service layer immediately before persisting
+ * the new password. Throws a {@link nus.edu.u.common.exception.ServiceException} carrying {@code
+ * PASSWORD_POLICY_VIOLATION} so the global handler returns a clean 400 to the client without
+ * leaking a stack trace.
  *
  * <p>Registered as a Spring bean via {@code SecurityAutoConfiguration}.
  */
 public class PasswordPolicyService {
 
     /**
-     * Substring match only fires above this length. Shorter identity strings produce too many
-     * false positives — e.g. an email local-part of "test", "info", "admin", or "bob" would
-     * otherwise reject any password containing those four letters. Equality still applies at
-     * any length.
+     * Substring match only fires above this length. Shorter identity strings produce too many false
+     * positives — e.g. an email local-part of "test", "info", "admin", or "bob" would otherwise
+     * reject any password containing those four letters. Equality still applies at any length.
      */
     private static final int SUBSTRING_CHECK_MIN_LENGTH = 5;
 
@@ -46,8 +45,7 @@ public class PasswordPolicyService {
         if (username != null && !username.isBlank()) {
             String u = username.toLowerCase();
             boolean matchesUsername =
-                    pwd.equals(u)
-                            || (u.length() >= SUBSTRING_CHECK_MIN_LENGTH && pwd.contains(u));
+                    pwd.equals(u) || (u.length() >= SUBSTRING_CHECK_MIN_LENGTH && pwd.contains(u));
             if (matchesUsername) {
                 throw exception0(
                         PASSWORD_POLICY_VIOLATION.getCode(),

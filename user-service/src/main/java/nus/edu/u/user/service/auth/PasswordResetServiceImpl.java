@@ -30,8 +30,7 @@ import org.springframework.stereotype.Service;
  * <p>Token model: 32 bytes from {@link SecureRandom}, base64url-encoded (no padding). Only the
  * SHA-256 hash of the token is persisted in Redis, so a Redis snapshot does not yield usable
  * tokens. The mapping {@code auth:password_reset:{sha256(token)} → userId} expires after 30
- * minutes. The mapping is deleted atomically with the password update, making the token
- * single-use.
+ * minutes. The mapping is deleted atomically with the password update, making the token single-use.
  */
 @Service
 @Slf4j
@@ -86,7 +85,10 @@ public class PasswordResetServiceImpl implements PasswordResetService {
         String tokenHash = sha256Base64Url(rawToken);
         stringRedisTemplate
                 .opsForValue()
-                .set(RESET_TOKEN_KEY_PREFIX + tokenHash, userDO.getId().toString(), RESET_TOKEN_TTL);
+                .set(
+                        RESET_TOKEN_KEY_PREFIX + tokenHash,
+                        userDO.getId().toString(),
+                        RESET_TOKEN_TTL);
 
         String resetLink = frontendBaseUrl + "/reset-password?token=" + rawToken;
         // TODO(F-9 follow-up): replace this stdout delivery with a call into notification-service
@@ -165,8 +167,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
         // either both attempts hit the same key and one will fail at this point — which is fine.
         Boolean deleted = stringRedisTemplate.delete(redisKey);
         if (Boolean.FALSE.equals(deleted)) {
-            log.warn(
-                    "Password reset token already consumed concurrently for userId={}", userId);
+            log.warn("Password reset token already consumed concurrently for userId={}", userId);
         }
 
         auditLogger.log(
