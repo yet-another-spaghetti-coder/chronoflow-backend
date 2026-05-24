@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import nus.edu.u.common.exception.ServiceException;
+import nus.edu.u.framework.security.password.PasswordPolicyService;
 import nus.edu.u.user.domain.dataobject.permission.PermissionDO;
 import nus.edu.u.user.domain.dataobject.role.RoleDO;
 import nus.edu.u.user.domain.dataobject.role.RolePermissionDO;
@@ -50,6 +51,10 @@ class RegServiceImplTest {
     @Mock private UserRoleMapper userRoleMapper;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private OrganizerNotificationPublisher organizerNotificationPublisher;
+    // F-10: cross-field policy check runs before persisting the new password.
+    // The default void no-op is exactly what these tests want (passwords used here are
+    // contrived test strings that don't trip the rule anyway).
+    @Mock private PasswordPolicyService passwordPolicyService;
 
     @InjectMocks private RegServiceImpl service;
 
@@ -67,6 +72,7 @@ class RegServiceImplTest {
         ReflectionTestUtils.setField(service, "roleMapper", roleMapper);
         ReflectionTestUtils.setField(service, "userRoleMapper", userRoleMapper);
         ReflectionTestUtils.setField(service, "passwordEncoder", passwordEncoder);
+        ReflectionTestUtils.setField(service, "passwordPolicyService", passwordPolicyService);
     }
 
     @Test

@@ -4,6 +4,7 @@ import static nus.edu.u.common.constant.SecurityConstants.REFRESH_TOKEN_COOKIE_N
 import static nus.edu.u.common.constant.SecurityConstants.REFRESH_TOKEN_REMEMBER_COOKIE_MAX_AGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -46,8 +47,9 @@ class AuthControllerTest {
         cookieConfig.setSecurity(false);
         ReflectionTestUtils.setField(controller, "cookieConfig", cookieConfig);
         // F-2: tests pre-date the rate limiter; default to "allow" so the existing assertions
-        // about cookie behaviour still hold.
-        when(rateLimiter.isAllowed(any(), any())).thenReturn(true);
+        // about cookie behaviour still hold. Lenient because logout / refresh don't touch
+        // the rate limiter and Mockito strict mode would flag the unused stubbing.
+        lenient().when(rateLimiter.isAllowed(any(), any())).thenReturn(true);
     }
 
     @Test

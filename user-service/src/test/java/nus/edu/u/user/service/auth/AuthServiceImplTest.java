@@ -9,6 +9,7 @@ import cn.dev33.satoken.stp.StpUtil;
 import java.util.List;
 import nus.edu.u.common.enums.CommonStatusEnum;
 import nus.edu.u.common.exception.ServiceException;
+import nus.edu.u.framework.security.lockout.LoginAttemptCounter;
 import nus.edu.u.user.domain.dataobject.user.UserDO;
 import nus.edu.u.user.domain.dto.RoleDTO;
 import nus.edu.u.user.domain.dto.UserRoleDTO;
@@ -33,6 +34,9 @@ class AuthServiceImplTest {
     @Mock private UserService userService;
     @Mock private TokenService tokenService;
     @Mock private RoleService roleService;
+    // F-3: lockout pre-check fires before BCrypt in AuthServiceImpl.authenticate;
+    // default isLocked() → false (Mockito default for boolean) is exactly what these tests want.
+    @Mock private LoginAttemptCounter loginAttemptCounter;
 
     @InjectMocks private AuthServiceImpl service;
 
