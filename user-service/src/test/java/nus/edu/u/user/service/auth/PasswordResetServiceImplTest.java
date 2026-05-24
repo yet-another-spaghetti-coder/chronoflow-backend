@@ -7,7 +7,6 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -90,7 +89,8 @@ class PasswordResetServiceImplTest {
 
         // audit emitted with userId + truncated normalised email
         verify(auditLogger)
-                .log(eq(SecurityEvent.PASSWORD_RESET_REQUESTED),
+                .log(
+                        eq(SecurityEvent.PASSWORD_RESET_REQUESTED),
                         eq("42"),
                         eq("10.0.0.1"),
                         eq("alice@example.com"));
@@ -109,7 +109,8 @@ class PasswordResetServiceImplTest {
         service.requestReset("nobody@nowhere.invalid", "10.0.0.1");
 
         verify(auditLogger)
-                .log(eq(SecurityEvent.PASSWORD_RESET_REQUESTED),
+                .log(
+                        eq(SecurityEvent.PASSWORD_RESET_REQUESTED),
                         eq(null),
                         eq("10.0.0.1"),
                         eq("nobody@nowhere.invalid"));
@@ -147,7 +148,8 @@ class PasswordResetServiceImplTest {
         assertThatThrownBy(() -> service.resetPassword(null, "Zphyr-7Brave-Wolf!", "10.0.0.1"))
                 .isInstanceOf(ServiceException.class);
         verify(auditLogger)
-                .log(eq(SecurityEvent.PASSWORD_RESET_TOKEN_INVALID),
+                .log(
+                        eq(SecurityEvent.PASSWORD_RESET_TOKEN_INVALID),
                         eq(null),
                         eq("10.0.0.1"),
                         eq("blank"));
@@ -158,7 +160,8 @@ class PasswordResetServiceImplTest {
         assertThatThrownBy(() -> service.resetPassword("   ", "Zphyr-7Brave-Wolf!", "10.0.0.1"))
                 .isInstanceOf(ServiceException.class);
         verify(auditLogger)
-                .log(eq(SecurityEvent.PASSWORD_RESET_TOKEN_INVALID),
+                .log(
+                        eq(SecurityEvent.PASSWORD_RESET_TOKEN_INVALID),
                         eq(null),
                         eq("10.0.0.1"),
                         eq("blank"));
@@ -168,10 +171,12 @@ class PasswordResetServiceImplTest {
     void resetPassword_unknownToken_auditsAndThrows() {
         when(valueOps.get(anyString())).thenReturn(null);
 
-        assertThatThrownBy(() -> service.resetPassword("any-token", "Zphyr-7Brave-Wolf!", "10.0.0.1"))
+        assertThatThrownBy(
+                        () -> service.resetPassword("any-token", "Zphyr-7Brave-Wolf!", "10.0.0.1"))
                 .isInstanceOf(ServiceException.class);
         verify(auditLogger)
-                .log(eq(SecurityEvent.PASSWORD_RESET_TOKEN_INVALID),
+                .log(
+                        eq(SecurityEvent.PASSWORD_RESET_TOKEN_INVALID),
                         eq(null),
                         eq("10.0.0.1"),
                         eq("not_found_or_expired"));
@@ -186,7 +191,8 @@ class PasswordResetServiceImplTest {
 
         verify(redis).delete(KEY_PREFIX + sha256("tok"));
         verify(auditLogger)
-                .log(eq(SecurityEvent.PASSWORD_RESET_TOKEN_INVALID),
+                .log(
+                        eq(SecurityEvent.PASSWORD_RESET_TOKEN_INVALID),
                         eq(null),
                         eq("10.0.0.1"),
                         eq("corrupt_payload"));
@@ -202,7 +208,8 @@ class PasswordResetServiceImplTest {
 
         verify(redis).delete(KEY_PREFIX + sha256("tok"));
         verify(auditLogger)
-                .log(eq(SecurityEvent.PASSWORD_RESET_TOKEN_INVALID),
+                .log(
+                        eq(SecurityEvent.PASSWORD_RESET_TOKEN_INVALID),
                         eq("42"),
                         eq("10.0.0.1"),
                         eq("user_not_found"));
@@ -220,7 +227,8 @@ class PasswordResetServiceImplTest {
 
         verify(redis).delete(KEY_PREFIX + sha256("tok"));
         verify(auditLogger)
-                .log(eq(SecurityEvent.PASSWORD_RESET_TOKEN_INVALID),
+                .log(
+                        eq(SecurityEvent.PASSWORD_RESET_TOKEN_INVALID),
                         eq("42"),
                         eq("10.0.0.1"),
                         eq("user_disabled"));
@@ -241,8 +249,8 @@ class PasswordResetServiceImplTest {
         service.resetPassword("tok", "Zphyr-7Brave-Wolf!", "10.0.0.1");
 
         // Cross-field policy was consulted
-        verify(passwordPolicyService).assertNotIdentity(
-                eq("Zphyr-7Brave-Wolf!"), eq("alice"), eq("alice@example.com"));
+        verify(passwordPolicyService)
+                .assertNotIdentity(eq("Zphyr-7Brave-Wolf!"), eq("alice"), eq("alice@example.com"));
 
         // Password persisted via UserService.updatePassword
         ArgumentCaptor<String> encodedCap = ArgumentCaptor.forClass(String.class);
@@ -256,7 +264,8 @@ class PasswordResetServiceImplTest {
 
         // Completion audit
         verify(auditLogger)
-                .log(eq(SecurityEvent.PASSWORD_RESET_COMPLETED),
+                .log(
+                        eq(SecurityEvent.PASSWORD_RESET_COMPLETED),
                         eq("42"),
                         eq("10.0.0.1"),
                         eq("alice"));
@@ -268,7 +277,8 @@ class PasswordResetServiceImplTest {
         when(valueOps.get(KEY_PREFIX + sha256("tok"))).thenReturn("42");
         when(userService.selectUserByIdWithoutTenant(42L)).thenReturn(user);
         org.mockito.Mockito.doThrow(new ServiceException(1001014, "policy"))
-                .when(passwordPolicyService).assertNotIdentity(anyString(), anyString(), anyString());
+                .when(passwordPolicyService)
+                .assertNotIdentity(anyString(), anyString(), anyString());
 
         assertThatThrownBy(() -> service.resetPassword("tok", "alice", "10.0.0.1"))
                 .isInstanceOf(ServiceException.class);
@@ -293,6 +303,10 @@ class PasswordResetServiceImplTest {
 
         verify(userService).updatePassword(eq(42L), anyString(), anyString());
         verify(auditLogger)
-                .log(eq(SecurityEvent.PASSWORD_RESET_COMPLETED), eq("42"), eq("10.0.0.1"), eq("alice"));
+                .log(
+                        eq(SecurityEvent.PASSWORD_RESET_COMPLETED),
+                        eq("42"),
+                        eq("10.0.0.1"),
+                        eq("alice"));
     }
 }

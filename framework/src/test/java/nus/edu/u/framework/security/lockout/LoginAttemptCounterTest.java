@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -110,8 +109,7 @@ class LoginAttemptCounterTest {
         boolean justLocked = counter.recordFailure("alice");
 
         assertThat(justLocked).isTrue();
-        verify(valueOps)
-                .setIfAbsent("auth:lockout:lock:alice", "1", Duration.ofSeconds(900));
+        verify(valueOps).setIfAbsent("auth:lockout:lock:alice", "1", Duration.ofSeconds(900));
         // Counter is dropped once the lock is set
         verify(redisTemplate).delete("auth:lockout:counter:alice");
     }
@@ -159,8 +157,7 @@ class LoginAttemptCounterTest {
 
     @Test
     void getLockTtlSeconds_returnsTtlFromRedis() {
-        when(redisTemplate.getExpire("auth:lockout:lock:alice", TimeUnit.SECONDS))
-                .thenReturn(720L);
+        when(redisTemplate.getExpire("auth:lockout:lock:alice", TimeUnit.SECONDS)).thenReturn(720L);
 
         assertThat(counter.getLockTtlSeconds("alice")).isEqualTo(720L);
     }
@@ -172,8 +169,7 @@ class LoginAttemptCounterTest {
 
     @Test
     void getLockTtlSeconds_redisReturnsNull_returnsMinusTwo() {
-        when(redisTemplate.getExpire("auth:lockout:lock:alice", TimeUnit.SECONDS))
-                .thenReturn(null);
+        when(redisTemplate.getExpire("auth:lockout:lock:alice", TimeUnit.SECONDS)).thenReturn(null);
 
         assertThat(counter.getLockTtlSeconds("alice")).isEqualTo(-2L);
     }

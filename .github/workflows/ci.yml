@@ -265,6 +265,11 @@ jobs:
       - name: SonarCloud Scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        # Run tests + JaCoCo so the scanner has an actual coverage report to read.
+        # Skipping them (the previous `-DskipTests=true -Djacoco.skip=true`) left Sonar
+        # with no jacoco.xml and made every new file show 0% coverage.
+        # `mvn verify` triggers: test (with JaCoCo agent) → jacoco:report →
+        # jacoco:report-aggregate → sonar:sonar, which reads the aggregated XML.
         run: |
-          mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -DskipTests=true \
-            -Djacoco.skip=true -Dsonar.projectKey=yet-another-spaghetti-coder_chronoflow-backend
+          mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            -Dsonar.projectKey=yet-another-spaghetti-coder_chronoflow-backend

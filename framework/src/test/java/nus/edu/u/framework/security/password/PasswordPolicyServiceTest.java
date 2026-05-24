@@ -142,9 +142,7 @@ class PasswordPolicyServiceTest {
         assertThatCode(
                         () ->
                                 service.assertNotIdentity(
-                                        "Zphyr-7Brave-Wolf!",
-                                        "alice",
-                                        "alice@example.com"))
+                                        "Zphyr-7Brave-Wolf!", "alice", "alice@example.com"))
                 .doesNotThrowAnyException();
     }
 

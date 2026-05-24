@@ -1,6 +1,8 @@
 package nus.edu.u.common.validation;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import jakarta.validation.ConstraintValidatorContext;
 import jakarta.validation.ConstraintValidatorContext.ConstraintViolationBuilder;
@@ -12,9 +14,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -33,17 +32,60 @@ class StrongPasswordValidatorTest {
 
         StrongPassword annotation =
                 new StrongPassword() {
-                    @Override public Class<? extends java.lang.annotation.Annotation> annotationType() { return StrongPassword.class; }
-                    @Override public String message() { return "default"; }
-                    @Override public Class<?>[] groups() { return new Class[0]; }
-                    @Override public Class<? extends jakarta.validation.Payload>[] payload() { return new Class[0]; }
-                    @Override public int min() { return 12; }
-                    @Override public int max() { return 128; }
-                    @Override public boolean requireUpper() { return true; }
-                    @Override public boolean requireLower() { return true; }
-                    @Override public boolean requireDigit() { return true; }
-                    @Override public boolean requireSymbol() { return true; }
-                    @Override public boolean rejectCommon() { return true; }
+                    @Override
+                    public Class<? extends java.lang.annotation.Annotation> annotationType() {
+                        return StrongPassword.class;
+                    }
+
+                    @Override
+                    public String message() {
+                        return "default";
+                    }
+
+                    @Override
+                    public Class<?>[] groups() {
+                        return new Class[0];
+                    }
+
+                    @Override
+                    public Class<? extends jakarta.validation.Payload>[] payload() {
+                        return new Class[0];
+                    }
+
+                    @Override
+                    public int min() {
+                        return 12;
+                    }
+
+                    @Override
+                    public int max() {
+                        return 128;
+                    }
+
+                    @Override
+                    public boolean requireUpper() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean requireLower() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean requireDigit() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean requireSymbol() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean rejectCommon() {
+                        return true;
+                    }
                 };
         validator = new StrongPasswordValidator();
         validator.initialize(annotation);
@@ -69,7 +111,7 @@ class StrongPasswordValidatorTest {
 
     @Test
     void isValid_tooShort_returnsFalse() {
-        assertThat(validator.isValid("Ab1!cdef", ctx)).isFalse();  // 8 chars
+        assertThat(validator.isValid("Ab1!cdef", ctx)).isFalse(); // 8 chars
     }
 
     @Test
@@ -139,17 +181,60 @@ class StrongPasswordValidatorTest {
 
     private StrongPassword annotationWith(boolean rejectCommon) {
         return new StrongPassword() {
-            @Override public Class<? extends java.lang.annotation.Annotation> annotationType() { return StrongPassword.class; }
-            @Override public String message() { return "default"; }
-            @Override public Class<?>[] groups() { return new Class[0]; }
-            @Override public Class<? extends jakarta.validation.Payload>[] payload() { return new Class[0]; }
-            @Override public int min() { return 12; }
-            @Override public int max() { return 128; }
-            @Override public boolean requireUpper() { return true; }
-            @Override public boolean requireLower() { return true; }
-            @Override public boolean requireDigit() { return true; }
-            @Override public boolean requireSymbol() { return true; }
-            @Override public boolean rejectCommon() { return rejectCommon; }
+            @Override
+            public Class<? extends java.lang.annotation.Annotation> annotationType() {
+                return StrongPassword.class;
+            }
+
+            @Override
+            public String message() {
+                return "default";
+            }
+
+            @Override
+            public Class<?>[] groups() {
+                return new Class[0];
+            }
+
+            @Override
+            public Class<? extends jakarta.validation.Payload>[] payload() {
+                return new Class[0];
+            }
+
+            @Override
+            public int min() {
+                return 12;
+            }
+
+            @Override
+            public int max() {
+                return 128;
+            }
+
+            @Override
+            public boolean requireUpper() {
+                return true;
+            }
+
+            @Override
+            public boolean requireLower() {
+                return true;
+            }
+
+            @Override
+            public boolean requireDigit() {
+                return true;
+            }
+
+            @Override
+            public boolean requireSymbol() {
+                return true;
+            }
+
+            @Override
+            public boolean rejectCommon() {
+                return rejectCommon;
+            }
         };
     }
 }
